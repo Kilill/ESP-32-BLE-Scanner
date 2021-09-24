@@ -1,0 +1,10 @@
+{
+    "ssid":"crash",
+    "password" : "T0655356394",
+    "hostname": "",
+    "mqttServer" : "",
+    "mqttPort" : "17501",
+    "mqttUser" : "sjaak",
+    "mqttPassword" : "test",
+    "room" : "kweenie"
+ }

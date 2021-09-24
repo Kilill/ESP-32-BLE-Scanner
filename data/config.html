@@ -15,27 +15,33 @@
             <h3>for Home Assistant</h2>
 </div>
 <div style='text-align:center;'>
-    <a href="/" class="nav_button">Home</a><a href="/devices" class="nav_button">Device Management</a><a href="/setup" class="nav_button">Setup</a>
+    <a href="/" class="nav_button">Home</a><a href="/devices" class="nav_button">Device Management</a><a href="/config" class="nav_button">Config</a>
 </div>
 <br><br>
 
-
-<fieldset>
-
-<legend style="padding:8px;text-align:center;border: 20px"><b>&nbsp;Credentials&nbsp;</b>
-</legend>
 <div id='error'></div>
-<form id='form' action='/setup_get' method='GET'>
-    <p><b>WIFI SSID:</b><br>
+<form id='form' action='/config' method='POST'>
+   <fieldset>
+   <legend ><b>WIFI&nbsp;</b></legend>
+    <p><b>WIFI SSID:</b> <small>Leave this empty to start the ESP in WIFI AP mode.</small><br>
         <input id='ssid' name='ssid' value='%SSID%'>
     </p>
     <p><label><b>WIFI Password:</b></label>
         <br>
         <input id='password' type='password' name='password' value='%PASSWORD%'>
     </p>
-    <p><b>Room:</b>(will be the status of your sensor, when detected) (also hostname)
+  </fieldset>
+  <fieldset>
+  <legend style="padding:12px;border: 20px"><b>Network</b></legend>
+    <p><b>Hostname:</b> <small>Will be the name on the network (extended with room name) , as well as the WIFI AP</small>
+      <input id='hostname' name='hostname' value='%HOSTNAME%'>
+    </p>
+    <p><b>Room:</b><small> Will be the status of your sensor, when detected (also in hostname)</small>
         <input id='room' name='room' value='%ROOM%'>
     </p>
+  </fieldset>
+  <fieldset>
+  <legend style="padding:12px;"><b>&nbsp;MQTT&nbsp;</b></legend>
     <p><b>MQTT Server IP:</b>
         <br>
         <input id='mqttServer' name='mqttServer' value='%MQTTSERVER%'>
@@ -53,6 +59,7 @@
         <input id='mqttPassword' type='password' name='mqttPassword' value='%MQTTPASSWORD%'>
     </p>
     <br>
+    </fieldset>
     <button type='submit' id='submit' class='button save'>Save Settings</button>
 </form>
 </fieldset>
