@@ -9,5 +9,5 @@ Unfortunately, at the moment I am not able to create a working .bin file from th
 For full instructions see [the orginal repo](https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner) 
 
 Notes
-* If you have not adjusted config.json and added your wifi credentials, then when you first fire up the esp32, it will be in AP mode. Connect to the wifi AP by the name of 'ESP32 BLE Scanner' and then in your browser connect to http://192.168.4.1  You can then change the settings omn the config page accordingly.
+* If you have not adjusted config.json and added your wifi credentials, then when you first fire up the esp32, it will be in AP mode. Connect to the wifi AP by the name of 'ESP32 BLE Scanner' and then in your browser connect to http://192.168.4.1  You can then change the settings on the config page accordingly.
 * The bluetooth scanning will only work once there is an active MQTT connection set
