@@ -2,6 +2,7 @@
 #include "fileStructs.h"
 
 WiFiClient espClient;
+bool wifiAccesPointModeEnabled = false;
 
 void startWifiClient(Config &config);
 void setupAPmode(Config &config);
@@ -37,6 +38,7 @@ void setupAPmode(Config &config){
   WiFi.persistent(false); 
   boolean LWB1 = WiFi.softAP(config.hostname);
   if ( LWB1 ) {  
+      wifiAccesPointModeEnabled = true;
       Serial.println("Connect to the WIFI hotspot: \""+String(config.hostname)+"\"");
       Serial.println("Then connect your browser to http://"+WiFi.softAPIP().toString());        
   }else{  
@@ -59,7 +61,11 @@ void startWifiClient(Config &config){
 
   if (WiFi.status() != WL_CONNECTED) { 
     WiFi.begin(config.ssid, config.password); 
-    WiFi.hostname(config.hostname);
+    char fullHostname[90];
+    strcat(fullHostname,config.hostname);
+    strcat(fullHostname, "-");
+    strcat(fullHostname, config.room);
+    WiFi.hostname(fullHostname);
   }
 
   while (WiFi.status() != WL_CONNECTED) {

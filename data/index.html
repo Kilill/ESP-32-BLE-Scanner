@@ -5,34 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
 <title>ESP 32 Bluetooth Scanner for Home Assistant</title>
 <link rel="stylesheet" type="text/css" href="style.css">
+<script type="text/javascript" src="wsclient.js"></script>
 </head>
 
 
 
 <script>
-  setInterval(function ( ) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      
-        var x = document.getElementById("logs").value;
-        document.getElementById("logs").value = this.responseText + x ;
-
-    };
-    xhttp.open("GET", "/send_scan_results", true);
-    xhttp.send();
-
-    var yhttp = new XMLHttpRequest();
-    yhttp.onreadystatechange = function() {
-      
-        var y = document.getElementById("logs").value;
-        document.getElementById("logs").value = this.responseText + y ;
-
-    };
-    yhttp.open("GET", "/send_logs", true);
-    yhttp.send();
-
-  }, 1500 ) ;
-  </script>
+  connect();
+</script>
 
 
 
@@ -55,7 +35,8 @@
     </legend> 
 
 <p>
-<textarea id="logs" cols="120" name="logs" rows="15"></textarea>
+<!-- <textarea id="logs" cols="120" name="logs" rows="15"></textarea> -->
+<div id="logfield" name="logfield"></div>
 </p>
 </fieldset>
 

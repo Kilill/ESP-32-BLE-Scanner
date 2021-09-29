@@ -27,6 +27,8 @@ void loadConfiguration(String filename, Config &config) {
     strlcpy(config.mqttPort, jsonValueOrDefault(doc["mqttPort"],""), sizeof(config.mqttPort));
     strlcpy(config.mqttUser, jsonValueOrDefault(doc["mqttUser"],""), sizeof(config.mqttUser));
     strlcpy(config.mqttPassword, jsonValueOrDefault(doc["mqttPassword"],""), sizeof(config.mqttPassword));
+    strlcpy(config.mqttStateTopicPrefix, jsonValueOrDefault(doc["mqttStateTopicPrefix"],""), sizeof(config.mqttStateTopicPrefix));
+    strlcpy(config.mqttScanTopicPrefix, jsonValueOrDefault(doc["mqttScanTopicPrefix"],""), sizeof(config.mqttScanTopicPrefix));
     // Close the file (Curiously, File's destructor doesn't close the file)
     configFile.close();
   }else{
@@ -85,12 +87,45 @@ bool saveConfig(Config  &config){
   doc["mqttPort"]     = config.mqttPort;
   doc["mqttUser"]     = config.mqttUser;
   doc["mqttPassword"] = config.mqttPassword;
+  doc["mqttScanTopicPrefix"] = config.mqttScanTopicPrefix;
+  doc["mqttStateTopicPrefix"] = config.mqttStateTopicPrefix;
 
   if(serializeJson(doc, outfile)==0) {
         Serial.println("Failed to write settings to SPIFFS config file");
         success = false;
   }
   return success;
+
+}
+
+bool saveDevices(Devices  &devices){
+  bool success = true;
+  File outfile = SPIFFS.open("/devices.json","w");
+  StaticJsonDocument<1000> doc;
+  doc["device_name1"] = devices.device_name1;
+  doc["device_name2"] = devices.device_name2;
+  doc["device_name3"] = devices.device_name3;
+  doc["device_uuid1"] = devices.device_uuid1;
+  doc["device_uuid2"] = devices.device_uuid2;
+  doc["device_uuid3"] = devices.device_uuid3;
+  
+  if(serializeJson(doc, outfile)==0) {
+        Serial.println("Failed to write settings to SPIFFS devices file");
+        success = false;
+  }
+  return success;
+
+}
+
+ StaticJsonDocument<1000> getDevicesAsJson(Devices  &devices){
+  StaticJsonDocument<1000> devicesJsonDoc;
+  devicesJsonDoc["device_name1"] = devices.device_name1;
+  devicesJsonDoc["device_name2"] = devices.device_name2;
+  devicesJsonDoc["device_name3"] = devices.device_name3;
+  devicesJsonDoc["device_uuid1"] = devices.device_uuid1;
+  devicesJsonDoc["device_uuid2"] = devices.device_uuid2;
+  devicesJsonDoc["device_uuid3"] = devices.device_uuid3;
+  return devicesJsonDoc;
 
 }
 
