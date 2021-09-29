@@ -3,7 +3,7 @@ for Home Assistant. [See thread at Home Assistant Board.](https://community.home
 
 ### This is a fork
 
-This is a fork of this repo https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner. An excellent idea, however I ran into some issues when trying to use it on my esp21. So I forked it in an attempt to fix those issues and changed the MQTT lib used for instance. I also ended up refactoring a lot of the code which made it, I think, somewhat easier to grasp and to extend upon. I am a programmer, but by no means an expert c++ programmer so there is undoubtedly still much room for improvement :). 
+This is a fork of this repo https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner. An excellent idea, however I ran into some issues when trying to use it on my esp32. So I forked it in an attempt to fix those issues (changed the MQTT lib used for instance). I also ended up refactoring a lot of the code which made it, I think, somewhat easier to grasp and to extend upon. I am a programmer, but by no means an expert c++ programmer so there is undoubtedly still much room for improvement :). 
 Unfortunately, at the moment I am not able to create a working .bin file from the code, so the only way to get this to work is to install it using PLatformIO (see full orioginal instructions).
 
 For full instructions see [the orginal repo](https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner) 
