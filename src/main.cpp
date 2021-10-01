@@ -9,7 +9,6 @@ extern void loadConfiguration(String filename, Config &config);
 extern void loadDevices(String filename, Devices &devices);
 extern void setupWIFI(Config &config);
 extern void setupWebServer(Config &config);
-extern void setupWebServer(Config &config);
 extern void setupMQTT();
 extern void MQTTreconnect();
 extern void setupBluetoothScanner();
