@@ -188,11 +188,11 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   }
 }
 
-void sendWsText(char level[],char message[]) {
+void sendWsText(const char * level,const char *message) {
   
   if (wsClient != nullptr && wsClient->canSend()) {
     char messageOut[250];
-    sprintf(messageOut, "{ \"type\": \"%s\", \"data\": %s}", level, message );
+    snprintf(messageOut, 250,"{ \"type\": \"%s\", \"data\": %s}", level, message );
     wsClient->text(messageOut);
   }
 }

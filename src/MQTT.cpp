@@ -4,7 +4,7 @@
 
 extern WiFiClient espClient;
 extern Config config;
-extern void sendWsText(char level[],char message[]);
+extern void sendWsText(const char *level,const char *message);
 
 PubSubClient pubSubclient(espClient);
 

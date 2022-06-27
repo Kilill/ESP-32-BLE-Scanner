@@ -13,15 +13,15 @@
 // Scanner Variables
 int scanTime = 5; //In seconds //5
 BLEScan *pBLEScan;
-char foundDeviceInfo[120];
+#define DEVICE_INFO_SIZE 120
+char foundDeviceInfo[DEVICE_INFO_SIZE];
 
 extern Devices devices;
 extern StaticJsonDocument<1000> getDevicesAsJson(Devices &devices);
 
 extern void sendScanResultsToWebClient(char mqtt_msg[]);
 extern void publishToScanTopic(char mqtt_msg[]);
-extern void sendWsText(char level[],char message[]);
-
+extern void sendWsText(const char * level,const char * message);
 
 // Distance Calculation
 float calculateAccuracy(float txCalibratedPower, float rssi){
@@ -58,7 +58,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks{
           String device = devicesJson[namey];
             if ( oBeacon.getProximityUUID().toString() == devicesJson[devicey]  ) {
               float distance = calculateAccuracy(oBeacon.getSignalPower(), advertisedDevice->getRSSI());
-              sprintf(foundDeviceInfo, "{ \"id\": \"%s\", \"name\": \"%s\", \"distance\": %f } \n", oBeacon.getProximityUUID().toString().c_str(), device.c_str(), distance );
+              snprintf(foundDeviceInfo, DEVICE_INFO_SIZE, "{ \"id\": \"%s\", \"name\": \"%s\", \"distance\": %f } \n", oBeacon.getProximityUUID().toString().c_str(), device.c_str(), distance );
               sendWsText("device", foundDeviceInfo);
               publishToScanTopic(foundDeviceInfo);
             }
