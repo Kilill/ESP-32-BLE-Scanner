@@ -1,0 +1,118 @@
+#define ARDUINOJSON_ENABLE_COMMENTS 1
+#include "Util.hpp"
+#include "Devices.hpp"
+#include "Config.hpp"
+
+#include "dbgLevels.h"
+//#define DEBUG_LEVEL DBG_L
+#include "debug.h"
+
+Config::Config(std::string cfgFileName): Settings(cfgFileName) {
+	valid=false;
+}
+
+bool Config::load() {
+	char * bull;
+	INFO("Loading config\n");
+	if (! openFile()) {
+		setStatus(ERROR_MSG, ALL, "%s - Failed to open config file %s", __PRETTY_FUNCTION__, fileName.c_str() );
+		return false;
+	}
+	StaticJsonDocument<JSON_DOC_SIZE> doc;
+	DeserializationError error = deserializeJson(doc, file);
+	if (error){
+		ERR("loadConfig: Failed to read config file(%s), using empty configuration \n",fileName.c_str());
+		return false;
+	}
+	ssid = 					doc["ssid"].as<std::string>();
+	password=				doc["password"].as<std::string>();
+	hostname=				doc["hostname"].as<std::string>();
+	room=					doc["room"].as<std::string>();
+	ipaddress=				doc["ipaddress"].as<std::string>();
+	apipaddress=			doc["apipaddress"].as<std::string>();
+	netmask=				doc["netmask"].as<std::string>();
+	mqttServer=				doc["mqttServer"].as<std::string>();
+	mqttPort=				doc["mqttPort"].as<std::string>();
+	mqttUser=				doc["mqttUser"].as<std::string>();
+	mqttPassword=			doc["mqttPassword"].as<std::string>();
+	mqttStateTopicPrefix=	doc["mqttStateTopicPrefix"].as<std::string>();
+	mqttScanTopicPrefix=	doc["mqttScanTopicPrefix"].as<std::string>();
+	ntpServer=				doc["ntpServer"].as<std::string>();
+	gmtOffset=				doc["gmtOffser"].as<int>();
+	daylightOffset=			doc["daylightOffset"].as<int>();
+	debugLvl=				doc["debugLvl"].as<int>();
+
+	// set default for some
+	// "hostname" will be modified to "hostname_room" by startWifiClient 
+	if(hostname.size()==0) hostname=DEFAULT_HOST_NAME;
+	fullHostname=hostname+"_"+room;
+	//
+	// default gateway will be set to same ip address 
+	if(apipaddress.size()==0) apipaddress=DEFAULT_IP_ADDRESS;
+	if(netmask.size()==0) netmask=DEFAULT_NET_MASK;
+	if(password.size()==0) password=DEFAULT_WIFI_PASSWORD;
+	if(mqttUser.size()==0) mqttUser=DEFAULT_MQTT_USER;
+	if(mqttPort.size()==0) mqttPort=DEFAULT_MQTT_PORT;
+
+
+	closeFile();
+	// check for valid wifi credentials
+	if(  ssid.size() 
+		&& password.size()
+		&& hostname.size() 
+		&& ssid.size() 
+	){
+		DBG("Web lig valid\n") ;
+		webValid =true;
+	} else {
+		FAIL("missing ssid,hostname or password in config\n");
+	}
+
+	if( room.size()
+		&& mqttServer.size()
+		&& mqttPort.size()
+		&& mqttUser.size()
+		&& mqttPassword.size()
+		&& mqttStateTopicPrefix.size()
+		&& mqttScanTopicPrefix.size()
+	  ) {
+		DBG("Mqtt config valid\n") ;
+		valid= webValid && mqttValid;
+		mqttValid = true;
+	} else {
+		ERR("Missing mqttserver, mqttPort, mqttUser, mqttPassword, mqttStateTopicPrefix or mqttScanTopicPregix\n");
+	}
+	INFO("Config  Loaded \n");
+	return true;
+};
+
+bool Config::save(){
+
+	bool valid = false;
+	if(!openFile("w")) {
+
+		setStatus(ERROR_MSG,ALL,"%s - Cant Save config file, no file name found",__PRETTY_FUNCTION__);
+		return false;
+	}
+	StaticJsonDocument<JSON_DOC_SIZE> doc;
+
+	doc["room"]					= config.room;
+	doc["ssid"]					= config.ssid;
+	doc["password"]				= config.password;
+	doc["hostname"]				= config.hostname;
+	doc["mqttServer"]			= config.mqttServer;
+	doc["mqttPort"]				= config.mqttPort;
+	doc["mqttUser"]				= config.mqttUser;
+	doc["mqttPassword"]			= config.mqttPassword;
+	doc["mqttScanTopicPrefix"]	= config.mqttScanTopicPrefix;
+	doc["mqttStateTopicPrefix"]	= config.mqttStateTopicPrefix;
+	doc["ntpServer"] 			= config.ntpServer;
+	doc["gmtOffser"]			= config.gmtOffset;
+	doc["daylightOffset"]		= config.daylightOffset;			
+
+	if(serializeJson(doc, file)==0) {
+		setStatus(ERROR_MSG,ALL,"Failed to write settings to SPIFFS config file");
+		return false;
+	}
+	return true;
+}

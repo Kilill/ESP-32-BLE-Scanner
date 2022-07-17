@@ -1,0 +1,39 @@
+{
+	// ssid of local wifi net
+    "ssid"					: "myWifi",
+	// password for same
+    "password" 				: "secret",
+	// hostname together with room will used as ssid when running in AP mode
+    "hostname"				: "BLE_Scan_",
+	// ip address to use as client, leave blank for DHCP
+	"ipaddress"				: "",
+	// ip address to use when in AP mode if blank defauilts to 192.168.4.1 if not set
+	"apipaddress"			: "192.168.4.1",
+	// netmask to use when running in ap mode defaults tp 255.255.255.0 if not set
+	"netmask"				: "255.255.255.0",
+	// FQDN/IP address to mqtt server
+    "mqttServer" 			: "mqtt.local.net",
+	// mqtt port defaults to 1883
+    "mqttPort" 				: "1883",
+	// mqtt user with submit previlieges
+    "mqttUser" 				: "BLE32Scanner",
+	// password for same
+    "mqttPassword" 			: "MQttSecret",
+	// base of scant topic for scan results, room will be concatenated at end for full topic
+    "mqttScanTopicPrefix"	: "/HAS/presence/scan/",
+	// base of status topic for status messages will be concatednated with room
+    "mqttStateTopicPrefix"	: "/HAS/presence/status/",
+	// name of location where sensor is located used as subtopic in scan and status reports
+    "room" 					: "Room 1",
+	// FQDN /IP address of nntp server used for retreiving correct time
+	"ntpServer"				: "pool.ntp.org",
+	// GMT offset of local time zone in seconds
+	"gmtOffset"				: "0",
+	// daylight saving offset if in effect
+	"daylightOffset"		: "0"
+	// Inital debug level for logging to serial, if not set or 0 defaults to INFO (see debug.h and dbgLevels.h)
+	// You also need to set the DEBUG_LEVEL macro in each file for debug do be included
+	// see debug.h for explanation
+	"debugLvl"				: 0
+ }
+// vim: ts=2 sw=2 et

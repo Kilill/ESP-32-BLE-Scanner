@@ -1,5 +1,5 @@
 {
-    "device_uuid1": "", "device_name1": "", 
-    "device_uuid2": "", "device_name2" : "",
-    "device_uuid3": "", "device_name3" : ""
+	"devices": [
+		{ "uuid": "ba7f519d-4fae-4268-9584-c8e69bbdc2fc", "name": "killphone" }
+	]
 }

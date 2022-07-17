@@ -1,18 +1,36 @@
-div,fieldset,input,select { 
-    padding:8px;
-    font-size:1em;
+.legend {
+	padding:12px;
+	border: 20px;
+	background-color: gray;
+	font-weight: bold;
 }
 
-fieldset {
+.label {
+	font-weight: bold;
+	background-color: rgba(128,128,128,0.3);
+	width: 210px;
+}
+
+th {
+	font-weight: bold;
+	background-color: rgba(128,128,128,0.3);
+}
+
+.fieldset {
+	margin: auto;
+	width: 90%;
     background:#FFFFFF;
+    border: 2px #56C1F1 solid;
+	margin-top:8px;
+    padding:8px;
+    font-size:1em;
 }
 
 p {
     margin:0.5em 0;
 }
 
-input {
-        width:100%;
+.field {
         box-sizing:border-box;
         -webkit-box-sizing:border-box;
         -moz-box-sizing:border-box;
@@ -21,12 +39,15 @@ input {
         border-color: transparent;
         border-bottom: 1px solid #56C1F1;
         outline: none;
-        padding:5px;
-        margin:5px 0;
+        padding-left:5px;
+        margin:1px 0 2px 0;
+}
+input {
+	border:none;
 }
 
 input[type=range] {
-        width:99%;
+        width:50%%;
 }
 
 textarea {
@@ -56,18 +77,11 @@ textarea {
   width: 100%;
 }
 
-fieldset {
-        border: 2px #56C1F1 solid;
-        }
 
 body {   
         text-align:center;
         font-family:verdana,sans-serif;
         background:#FFFFFF;
-}
-
-td {     
-        padding:0px;
 }
 
 button {
@@ -86,6 +100,16 @@ button {
 button:hover {
         background:#0e70a4;
 }
+.uuid {
+	width: 20em;
+}	
+.name {
+	width: 20em;
+}
+
+.labelP {
+	display: inline;
+}
 
 .save {
         background:#56C1F1;
@@ -99,6 +123,11 @@ a {
         color:#1fa3ec;
         text-decoration:underline;
 }
+.l {
+	text-align:left;
+	margin-left:10px;
+}
+
 .p {
         float:left;
         text-align:left;
@@ -129,4 +158,48 @@ a {
 
 .nav_button:hover {
     background-color: #43b6eb;
+}
+[data-tip] {
+	position:relative;
+
+}
+[data-tip]:before {
+	content:'';
+	/* hides the tooltip when not hovered */
+	display:none;
+	content:'';
+	border-left: 5px solid transparent;
+	border-right: 5px solid transparent;
+	border-bottom: 5px solid #1a1a1a;	
+	position:absolute;
+	top:30px;
+	left:35px;
+	z-index:8;
+	font-size:0;
+	line-height:0;
+	width:0;
+	height:0;
+}
+[data-tip]:after {
+	display:none;
+	content:attr(data-tip);
+	position:absolute;
+	bottom:35px;
+	left:0px;
+	padding:5px 8px;
+	background:lightyellow;
+	color:#0;
+	z-index:9;
+	font-size: 0.75em;
+	height:18px;
+	line-height:18px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	white-space:nowrap;
+	word-wrap:normal;
+}
+[data-tip]:hover:before,
+[data-tip]:hover:after {
+	display:block;
 }

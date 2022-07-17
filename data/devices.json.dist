@@ -1,0 +1,10 @@
+// copy this file to devices.json
+// "uuid" needs to be in the below format ie, "name" can be anything you like
+// by default you can have up to 10 devices.
+// if more is need the MAX_DEVICES paramter in Devices.hpp needs to set
+{
+	"devices": [
+		{ "uuid": "aaaaaaaa-bbbb-cccc-eeee-ffffffffffff", "name": "Some known phone" }
+	]
+}
+// vim: ts=4 sw=4 et

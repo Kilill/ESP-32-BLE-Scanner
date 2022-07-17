@@ -9,68 +9,130 @@
 <body>
 
 <div style='text-align:left;display:inline-block;color:#000000;min-width:400px;'>
-        <div style='text-align:center;color:#000000;'>
-            <h2>ESP 32 Bluetooth Scanner</h2>
-            <h3>for Home Assistant</h2>
+		<div style='text-align:center;color:#000000;'>
+			<h2>ESP 32 Bluetooth Scanner</h2>
+			<h3>for Home Assistant</h2>
 </div>
 <div style='text-align:center;'>
-    <a href="/" class="nav_button">Home</a><a href="/devices" class="nav_button">Device Management</a><a href="/config" class="nav_button">Config</a>
+	<a href="/" class="nav_button">Home</a><a href="/devices" class="nav_button">Device Management</a><a href="/config" class="nav_button">Config</a>
 </div>
 <br><br>
 
-<div id='error'></div>
 <form id='form' action='/config' method='POST'>
-   <fieldset>
-   <legend ><b>WIFI&nbsp;</b></legend>
-    <p><b>WIFI SSID:</b> <small>Leave this empty to start the ESP in WIFI AP mode.</small><br>
-        <input id='ssid' name='ssid' value='%SSID%'>
-    </p>
-    <p><label><b>WIFI Password:</b></label>
-        <br>
-        <input id='password' type='password' name='password' value='%PASSWORD%'>
-    </p>
-  </fieldset>
-  <fieldset>
-  <legend style="padding:12px;border: 20px"><b>Network</b></legend>
-    <p><b>Hostname:</b> <small>Will be the name on the network (extended with room name) , as well as the WIFI AP</small>
-      <input id='hostname' name='hostname' value='%HOSTNAME%'>
-    </p>
-    <p><b>Room:</b><small> Will be the status of your sensor, when detected (also used in hostname & MQTT topics)</small>
-        <input id='room' name='room' value='%ROOM%'>
-    </p>
-  </fieldset>
-  <fieldset>
-  <legend style="padding:12px;"><b>&nbsp;MQTT&nbsp;</b></legend>
-    <p><b>MQTT Server IP:</b>
-        <br>
-        <input id='mqttServer' name='mqttServer' value='%MQTTSERVER%'>
-    </p>
-    <p><b>MQTT Port:</b> (usually: 1883)
-        <br>
-        <input id='mqttPort' name='mqttPort' value='%MQTTPORT%'>
-    </p>
-    <p><b>MQTT User:</b>
-        <br>
-        <input id='mqttUser' name='mqttUser' value='%MQTTUSER%'>
-    </p>
-    <p><label><b>MQTT Password:</b></label>
-        <br>
-        <input id='mqttPassword' type='password' name='mqttPassword' value='%MQTTPASSWORD%'>
-    </p>
-    <p><label><b>MQTT Scan (base)topic:</b> <small>Full topic name will be the base with the room name as subtopic</small></label>
-      <br>
-      <input id='mqttScanTopicPrefix' type='mqttScanTopicPrefix' name='mqttScanTopicPrefix' value='%MQTTSCANTOPICPREFIX%'>
-    </p>
-    <p><label><b>MQTT state (base)topic</b> <small>Full topic name will be the base with the room name as subtopic</small></label>
-      <br>
-      <input id='mqttStateTopicPrefix' type='mqttStateTopicPrefix' name='mqttStateTopicPrefix' value='%MQTTSTATETOPICPREFIX%'>
-    </p>
-    <br>
-    </fieldset>
-    <button type='submit' id='submit' class='button save'>Save Settings</button>
-</form>
-</fieldset>
+	<fieldset class="fieldset">
+		<legend class="legend">WIFI</legend>
+		<table>
+		<tr>
+			<td class="label"><label for='ssid'>WIFI SSID:</label></td>
+			<td><div data-tip= 'SSID to connect to,Leave blank to start in WIFI AP mode.'>
+					<input	id='ssid' name='ssid' value='%SSID%'>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td class='label'><label for='password'>WIFI Password:</label></td>
+			<td><div data-tip='Password for WIFI access. Will also be used for AP mode, Defaults to "Esp32blE" if not set'>
+					<input	id='password' type='password' name='password' value='%PASSWORD%'>
+				</div>
+			</td>
+		</tr>
+		</table>
+	</fieldset>
 
+	<fieldset class='fieldset'>
+		<legend class='legend'>Network</legend>
+		<table>
+		<tr>
+			<td class='label'><label for='apipaddress'>AP IP Address:</label></td>
+			<td><div data-tip='IP address to use in ap mode. Defaults to "192.168.4.1"'>
+					<input	id='apipaaddress' type='text' name='aipaddress' value='%apipaddress%'>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td class='label'><label for='clipaddress'>Client ip address:</label></td>
+			<td><div data-tip='IP address to use in client mode. Leave blank for dhcp assigned'>
+					<input	id='clipaaddress' type='text' name='clipaddress' value='%clpipaddress%'>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td class='label'><label for='netmask'>Netmask:</label></td>
+			<td><div data-tip= 'IP netmask to use in client mode. Leave blank for dhcp assigned'>
+					<input	id='netmask' type='text' name='netmask' value='%netmask%'>
+				</div>
+			</td>
+		</tr>
+			<tr>
+				<td class='label'><label for='hostname'>Hostname:</label></td>
+				<td><div data-tip='Name on the the host/network extended with room name. Will also be used as the WIFI AP name'>
+						<input	id='hostname' name='hostname' value='%HOSTNAME%'>
+					</div>
+				</td>
+			</tr>
+
+			<tr>
+				<td class='label'><label for='room'>Room:</label></td>
+				<td><div data-tip='Location name of sensor. Will be added to hostname and the  MQTT topics'>
+						<input	id='room' name='room' value='%ROOM%'>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+
+	<fieldset class='fieldset'>
+		<legend class='legend'>MQTT</legend>
+		<table>
+			<tr>
+				<td class='label'><label for='mqttServer' >MQTT Server IP: </label></td>
+				<td><div data-tip=' FQDN or IP address of mqtt server'>
+						<input	id='mqttServer' name='mqttServer' value='%MQTTSERVER%'>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class='label'><label for='mqttPort'>MQTT Port: </label></td>
+				<td><div data-tip= 'Defaults to "1883" if blank'>
+						<input	id='mqttPort' name='mqttPort' value='%MQTTPORT%'>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class='label'><label for'mqttUser'>MQTT User: </label></td>
+				<td><div data-tip=' Username on MQTT Server with submit permision. Defaults to "BLEScanner32"'>
+						<input	id='mqttUser' name='mqttUser' value='%MQTTUSER%'>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class='label'><label for='mqttPassword'>MQTT Password: </label></td>
+				<td><div data-tip=' Password for above user'>
+						<input	id='mqttPassword' type='password' name='mqttPassword' value='%MQTTPASSWORD%'>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class='label'><label for='mqttScanTopicPrefix'>MQTT Scan base topic: </label></td>
+				<td><div data-tip= 'Base topic for scans room wil be added as subtopic'>
+						<input	id='mqttScanTopicPrefix' name='mqttScanTopicPrefix' value='%MQTTSCANTOPICPREFIX%'>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class='label'><label for='mqttStateTopicPrefix'>MQTT state base topic: </label></td>
+				<td><div data-tip="Base topic status message. Room will be added as subtopic">
+						<input	id='mqttStateTopicPrefix' type='mqttStateTopicPrefix' name='mqttStateTopicPrefix' value='%MQTTSTATETOPICPREFIX%'>
+
+					</div>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<br><br>
+
+	<button type='submit' id='submit' class='button save'>Save Settings</button>
+</form>
 
 </body>
 </html>
