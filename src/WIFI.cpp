@@ -1,8 +1,18 @@
+#define ARDUINOJSON_ENABLE_COMMENTS 1
+#include "Arduino.h"
+#include <stdio.h>
+#include <string>
+#include <map>
+#include "SPIFFS.h" 
+#include <ArduinoJson.h> 
 #include <WiFi.h>
 #include <esp_sntp.h>
+#include "Settings.hpp"
 #include "Config.hpp"
 #include "Devices.hpp"
 #include "Util.hpp"
+
+
 #include "dbgLevels.h"
 #define DEBUG_LEVEL INFO_L
 #include "debug.h"

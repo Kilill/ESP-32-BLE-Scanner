@@ -1,3 +1,12 @@
+#define ARDUINOJSON_ENABLE_COMMENTS 1
+#include "Arduino.h"
+#include <stdio.h>
+#include <string>
+#include <map>
+#include "SPIFFS.h" 
+#include <ArduinoJson.h> 
+#include "Settings.hpp"
+#include "Config.hpp"
 #include "Devices.hpp"
 #include "Util.hpp"
 
@@ -18,8 +27,6 @@ StaticJsonDocument<DEVICE_JSON_DOC_SIZE> doc;
 			if((desError=deserializeJson(doc, file)) != DeserializationError::Ok ) {
 
 				setStatus(ERROR_MSG,ALL,"Failed to deserialize device file:(%s). No devices configured",fileName.c_str());
-
-
 #ifdef DEBUG
 				printf("code: %d = ",desError);
 				switch(desError.code()) {
@@ -45,7 +52,6 @@ StaticJsonDocument<DEVICE_JSON_DOC_SIZE> doc;
 						printf("Uknown Deserialize error\n");
 					break;
 				}
-
 #endif
 				count=0;
 				return false;
@@ -54,9 +60,14 @@ StaticJsonDocument<DEVICE_JSON_DOC_SIZE> doc;
 		ERR("failed to open %s file\n",fileName.c_str());
 		return false;
 	}
+	return fill(doc["devices"].as<JsonArray>());
+}
+
+
+bool Devices::fill(const JsonArray& devices) {
 	int i=0;	
 	DBG("Filling device map\n");
-	for (JsonObject jdevice : doc["devices"].as<JsonArray>()) {
+	for (JsonObject jdevice : devices) {
 		std::string uuid=jdevice["uuid"].as<std::string>();
 		std::string name=jdevice["name"].as<std::string>();
 		

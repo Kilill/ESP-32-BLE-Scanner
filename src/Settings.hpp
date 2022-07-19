@@ -27,13 +27,15 @@ public:
 			fsValid=true;
 	}
 
-
+	// open the file in SPIFFs	
 	bool openFile() {return openFile("r");}
 	bool openFile(const char* mode);
 
 	void closeFile(){ file.close();};
 
+	// Load content into map
 	virtual bool load()=0;
+	// Save map to file
 	virtual bool save()=0;
 };
 

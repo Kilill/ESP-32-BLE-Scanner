@@ -1,9 +1,19 @@
+#define ARDUINOJSON_ENABLE_COMMENTS 1
+#include "Arduino.h"
+#include <stdio.h>
+#include <string>
+#include <map>
+#include "SPIFFS.h" 
 #include <WiFi.h>
 #include <AsyncMqttClient.h>
 #include <AsyncMqttClient/DisconnectReasons.hpp>
-
+#include <ArduinoJson.h> 
+#include "Settings.hpp"
 #include "Config.hpp"
+#include "Devices.hpp"
 #include "Util.hpp"
+
+
 #include "dbgLevels.h"
 //#define DEBUG_LEVEL DBG_L
 #include "debug.h"

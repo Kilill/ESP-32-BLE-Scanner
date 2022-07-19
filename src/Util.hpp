@@ -30,6 +30,7 @@ extern const char *  MsgTypeTxt[];
 
 extern Devices devices;
 extern Config config;
+
 extern char *mqttScanTopic;
 extern char *mqttStateTopic;
 

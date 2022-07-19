@@ -1,5 +1,8 @@
 {
 	"devices": [
-		{ "uuid": "ba7f519d-4fae-4268-9584-c8e69bbdc2fc", "name": "killphone" }
+		{ "uuid": "aaaaaaa1-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "Phone 1" },
+		{ "uuid": "aaaaaaa2-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "Phone 2" },
+		{ "uuid": "aaaaaaa3-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "Phone 3" },
+		{ "uuid": "aaaaaaa4-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "Phone 4" }
 	]
 }

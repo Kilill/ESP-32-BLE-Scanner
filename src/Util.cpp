@@ -1,9 +1,19 @@
-#include <Arduino.h>
+#define ARDUINOJSON_ENABLE_COMMENTS 1
+#include "Arduino.h"
+#include <stdio.h>
+#include <string>
+#include <map>
+#include "SPIFFS.h" 
+#include <ArduinoJson.h>
+#include <AsyncMqttClient.h>
+#include <AsyncMqttClient/DisconnectReasons.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
 #include "Util.hpp"
 #include "time.h"
+
 #include "dbgLevels.h"
 //#define DEBUG_LEVEL DBG_L
 #include "debug.h"
@@ -18,8 +28,6 @@ const char * MsgTypeTxt[] ={
 	"ERROR",
 	"FAIL"
 };
-
-
 
 /*! \func setStatus
  * send status message to combination of serial, Mqtt, Web

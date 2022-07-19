@@ -1,9 +1,5 @@
 #ifndef __devices_h__
 #define __devices_h__
-#include <string>
-#include <map>
-#include "Settings.hpp"
-
 
 // std c++ map container , build on "std::pair" ie associative array
 typedef std::map<std::string,std::string> devMap_t ;
@@ -92,6 +88,7 @@ public:
 	bool exists(std::string uuid) { return devList.find(uuid)!=devList.end();};
 
 	bool load();
+	bool fill(const JsonArray& devices);
 	bool save();
 
 };

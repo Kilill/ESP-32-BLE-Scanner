@@ -1,7 +1,15 @@
+#define ARDUINOJSON_ENABLE_COMMENTS 1
+#include "Arduino.h"
 #include <stdio.h>
-#include <Settings.hpp>
-#include <SPIFFS.h>
+#include <string>
+#include <map>
+#include "SPIFFS.h" 
+#include <ArduinoJson.h> 
+#include "Settings.hpp"
+#include "Config.hpp"
+#include "Devices.hpp"
 #include "Util.hpp"
+
 #include "dbgLevels.h"
 //#define DEBUG_LEVEL DBG_L
 #include "debug.h"
@@ -25,7 +33,5 @@ bool Settings::openFile(const char * mode){
 		return false;
 	}
 	DBG("File open\n");
-	
 	return true;
 }
-

@@ -1,13 +1,20 @@
-#include "ESPAsyncWebServer.h"
+#define ARDUINOJSON_ENABLE_COMMENTS 1
+#include "Arduino.h"
+#include <stdio.h>
+#include <string>
+#include <map>
 #include "SPIFFS.h" 
 #include <ArduinoJson.h> 
-#include "dbgLevels.h"
-#define DEBUG_LEVEL DBG_L
-#include "debug.h"
+#include "ESPAsyncWebServer.h"
 
-#include "Config.hpp"
+#include "Settings.hpp"
 #include "Devices.hpp"
+#include "Config.hpp"
 #include "Util.hpp"
+
+#include "dbgLevels.h"
+//#define DEBUG_LEVEL DBG_L
+#include "debug.h"
 
 // TODO: what about user password access to server 
 // or even better dont start server unless button pushed ....
@@ -42,14 +49,75 @@ const char restart_html[] PROGMEM = "<html>\
 </body>\
 </html>";
 
+void notFound(AsyncWebServerRequest *request) {
+		request->send(404, "text/plain", "Whoot !? i have no clue what that is. (404)");
+}
+
+/** /func read post json data and fill the config instance
+ */
+
+bool configPost(uint8_t * data,AsyncWebServerRequest *request){
+	uint16_t count;
+	bool fillOk , saveOk;
+	DBG("configPost");
+
+	StaticJsonDocument<CONFIG_DOC_SIZE> jdoc;
+	DeserializationError desError;
+
+	StaticJsonDocument<CONFIG_DOC_SIZE> doc;
+	if ( (desError=deserializeJson(doc, (const char *) data)) != DeserializationError::Ok ) {
+		ERR("failed to deserialize config Data");
+		request->send(200, "text/html", "<div class=error>Failed to parse config data!</div>");
+		return false;
+	}
+	
+	if((fillOk=config.fillit(doc)) && (saveOk=config.save())){
+			request->send(200, "text/html", restart_html);
+			delay(1000);
+			ESP.restart();
+			return true; // should never return here but....
+	}else {
+		if(!fillOk)	
+			request->send(200, "text/html", "<div class=error>Failed to fill config data!</div>");
+		if(!saveOk)	
+			request->send(200, "text/html", "<div class=error>Failed to save config data!</div>");
+	}
+	return false;
+}
+
+/** /func read post json data and fill the device instance
+ */
+bool devicesPost(uint8_t * data,AsyncWebServerRequest *request) {
+	DeserializationError desError;
+	uint16_t count;
+	bool fillOk, saveOk;
+	StaticJsonDocument<DEVICE_JSON_DOC_SIZE> jsonDoc;
+
+	DBG("devicePost");
+	if ( (desError=deserializeJson(jsonDoc, (const char*)data)) != DeserializationError::Ok ) {
+		ERR("failed to deserialize config Data");
+		request->send(200, "text/html", "<div class=error>Failed to parse config data!</div>");
+		return false;
+	}
+
+	JsonArray postDev = jsonDoc["devices"].as<JsonArray>();
+	if( (fillOk=devices.fill(postDev)) && (saveOk=devices.save()) ) {
+		INFO("got %d devices from web UI \n", devices["devices"].size());
+		request->send(200, "text/html", "<div class=responce>New devices saved </div>");
+		return true;
+	} else {
+		ERR("%s failed \n",!fillOk?"fill":"save");
+		if(!fillOk)	
+			request->send(200, "text/html", "<div class=error>Failed to parse device data!</div>");
+		if(!saveOk)	
+			request->send(200, "text/html", "<div class=error>Failed to save device data!</div>");
+	}
+	return false;
+}
+
 
 void setupWebServer() {
 	INFO("Setting up webserver\n");
-	server.serveStatic("/config",SPIFFS,"/config.html");
-	server.serveStatic("/devices",SPIFFS,"/devices.html");
-	server.serveStatic("/",SPIFFS,"/index.html");
-
-
 
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
 		request->send(SPIFFS, "/index.html");
@@ -60,8 +128,11 @@ void setupWebServer() {
 	});
 
 	server.on("/wsclient.js", HTTP_GET, [](AsyncWebServerRequest *request){
-		request->send(SPIFFS, "/wsclient.js", "text/css");
+		request->send(SPIFFS, "/wsclient.js", "application/javascript");
 	});
+
+	server.on("/scripts.js", HTTP_GET, [](AsyncWebServerRequest *request){
+		request->send(SPIFFS, "/scripts.js", "application/javascript");
 
 	server.on("/config", HTTP_GET, [](AsyncWebServerRequest *request){
 		request->send(SPIFFS, "/config.html");
@@ -79,49 +150,20 @@ void setupWebServer() {
 		request->send(SPIFFS, "/devices.json","application/json" );
 	});
 
-	server.on("/config", HTTP_POST, [&](AsyncWebServerRequest *request){
-		// assigments here are ugly as fk but AsyncWebsever operates on arduino String...
-		if (request->hasParam("ssid", true))				config.ssid = request->getParam("ssid", true)->value().c_str();
-		if (request->hasParam("password", true)) 			config.password= request->getParam("password", true)->value().c_str();
-		if (request->hasParam("hostname", true))			config.hostname= request->getParam("hostname", true)->value().c_str();
-		if (request->hasParam("ipaddress", true))			config.mqttServer, request->getParam("ipaddress", true)->value();
-		if (request->hasParam("apipaddress", true))			config.mqttServer, request->getParam("apipaddress", true)->value();
-		if (request->hasParam("netmask", true))				config.mqttServer, request->getParam("netmask", true)->value();
-		if (request->hasParam("mqttServer", true))			config.mqttServer, request->getParam("mqttServer", true)->value().c_str();
-		if (request->hasParam("mqttPort", true))			config.mqttPort= request->getParam("mqttPort", true)->value().c_str();
-		if (request->hasParam("mqttUser", true))			config.mqttUser= request->getParam("mqttUser", true)->value().c_str();
-		if (request->hasParam("mqttPassword", true))		config.mqttPassword= request->getParam("mqttPassword", true)->value().c_str();
-		if (request->hasParam("mqttScanTopicPrefix", true))	config.mqttScanTopicPrefix= request->getParam("mqttScanTopicPrefix", true)->value().c_str();
-		if (request->hasParam("mqttStateTopicPrefix", true))config.mqttStateTopicPrefix= request->getParam("mqttStateTopicPrefix", true)->value().c_str();
-		if (request->hasParam("room", true))				config.room= request->getParam("room", true)->value().c_str();
-		if (request->hasParam("ntpServer", true))			config.room= request->getParam("ntpServerroom", true)->value().c_str();
-		if (request->hasParam("gmtOffset", true))			config.room= request->getParam("gmtOffset", true)->value().c_str();
-		if (request->hasParam("daylightOffset", true))		config.room= request->getParam("daylightOffset", true)->value().c_str();
-		if (config.save()){
-			request->send(200, "text/html", restart_html);
-		}else{
-			request->send(200, "text/html", "<br><br><br><div style='text-align:center;'><h3><b>Failed to save data!<b> Rebooting esp</div>");
-		}
-				 
-		delay(1000);
-		ESP.restart();
-	});
-/*
 	server.onRequestBody( [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
-            if ((request->url() == "/devices") && (request->method() == HTTP_POST)) {
-			DeserializationError desError;
-			StaticJsonDocument jsonDoc<JSON_DOC_SIZE>;
-			if (DeserializationError::Ok == deserializeJson(jsonDoc, (const char*)data))
-			{
-				JsonArray devices = jsonDoc["devices"].as<JsonArray>();
-
-				DBG("devices count : %d", devices["devices"].size());
+		uint16_t error=0;	
+		if (request->method() == HTTP_POST) {
+			if (request->url() == "/devices") {
+				if(error=devicesPost(data,request))
+					request->send(200,"update devices failed \n");
+			} else if (request->url() == "/config"){
+				if(error=configPost(data,request))
+					request->send(200,"update config failed \n");
 			}
-
-			request->send(200, "application/json", "{ \"status\": 0 }");
+				
 		}
-    );
-*/
+	});
+
 	server.onNotFound(notFound);
 
 	ws.onEvent(onWsEvent);
@@ -130,45 +172,6 @@ void setupWebServer() {
 
 	INFO("Webserver & Webservice started.\n");
 } 
-
-void notFound(AsyncWebServerRequest *request) {
-		request->send(404, "text/plain", "Whoot !? i have no clue what that is. (404)");
-}
-
-String fillConfigTemplate(const String& var){
-	String retValue; 
-	if(var == "SSID"){							retValue = config.ssid.c_str();
-	}else if(var == "PASSWORD"){				retValue = config.password.c_str();
-	}else if(var == "HOSTNAME"){				retValue = config.hostname.c_str();
-	}else if(var == "ROOM"){					retValue = config.room.c_str();
-	}else if(var == "MQTTSERVER"){				retValue = config.mqttServer.c_str();
-	}else if(var == "MQTTPORT"){				retValue = config.mqttPort.c_str();
-	}else if(var == "MQTTUSER"){				retValue = config.mqttUser.c_str();
-	}else if(var == "MQTTPASSWORD"){			retValue = config.mqttPassword.c_str();
-	}else if(var == "MQTTSTATETOPICPREFIX"){	retValue = config.mqttStateTopicPrefix.c_str();
-	}else if(var == "MQTTSCANTOPICPREFIX"){		retValue = config.mqttScanTopicPrefix.c_str();
-
-//TODO: Rewrite to new device structure
-//this an ugly kludge untill a rewrite of the web form to query for the number of devices ....
-
-	}else if(var.startsWith("DEVICE")) {
-			int ix =var.substring(6).toInt()-1;
-			if ( ix > devices.count) {
-				retValue="";
-			}else{
-				retValue = devices[ix]->second.c_str();
-			}
-	}else if(var.startsWith("UUID")){
-			int ix =var.substring(4).toInt()-1;
-			if (ix>devices.count) {
-				retValue="";
-			}else{
-				retValue = devices[ix]->first.c_str();
-			}
-	}
-	return retValue;
-}
-
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
 	if(type == WS_EVT_CONNECT){
 		wsClient = client;

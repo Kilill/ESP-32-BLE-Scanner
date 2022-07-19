@@ -16,19 +16,22 @@
                 <h3>for Home Assistant</h2>
 		</div>
 		<div style='text-align:center;'>
-        <a href="/" class="nav_button">Home</a><a href="/devices" class="nav_button">Device Management</a><a href="/config" class="nav_button">Config</a>
+        	<a href="/" class="nav_button">Home</a><a href="/devices" class="nav_button">Device Management</a><a href="/config" class="nav_button">Config</a>
 		</div>
-
 		<br><br>
-		<form id='form' action='/devices' method='POST'>
+		<form id='devForm' action='#' method='POST'>
 			<fieldset class='fieldset'>
 				<legend class='legend'>BLE Devices Beacons</legend>
-				<table id='devices'>
+				<table id='devtab'>
+					<thead>
 					<tr >
 						<th>UUID</th><th>Name</th> 
 					</tr>
+					</thead>
+					<tbody id='devices'>
+					</tbody>
 				</table>
-				<button id='submit' type='submit' class='button save'>Save Devices</button>
+				<button id='devSubmit' type='submit' class='button save'>Save Devices</button>
 			</fieldset>
 		</form>
 </body>

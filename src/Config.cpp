@@ -1,7 +1,14 @@
 #define ARDUINOJSON_ENABLE_COMMENTS 1
-#include "Util.hpp"
-#include "Devices.hpp"
+#include "Arduino.h"
+#include <stdio.h>
+#include <string>
+#include <map>
+#include "SPIFFS.h" 
+#include <ArduinoJson.h> 
+#include "Settings.hpp"
 #include "Config.hpp"
+#include "Devices.hpp"
+#include "Util.hpp"
 
 #include "dbgLevels.h"
 //#define DEBUG_LEVEL DBG_L
@@ -11,19 +18,34 @@ Config::Config(std::string cfgFileName): Settings(cfgFileName) {
 	valid=false;
 }
 
+/* need to read the file into a char buffer
+ * since trying to pass and JsonObject as am argument to fillit fails with
+ * weird errors that im not smart enough to grasp
+ */
 bool Config::load() {
-	char * bull;
+	bool result;
+
+	StaticJsonDocument<CONFIG_DOC_SIZE> jdoc;
+	DeserializationError desError;
 	INFO("Loading config\n");
+
 	if (! openFile()) {
 		setStatus(ERROR_MSG, ALL, "%s - Failed to open config file %s", __PRETTY_FUNCTION__, fileName.c_str() );
 		return false;
 	}
-	StaticJsonDocument<JSON_DOC_SIZE> doc;
-	DeserializationError error = deserializeJson(doc, file);
-	if (error){
-		ERR("loadConfig: Failed to read config file(%s), using empty configuration \n",fileName.c_str());
+
+	if ( (desError=deserializeJson(jdoc, file)) != DeserializationError::Ok ) {
+		ERR("failed to deserialize config Data");
 		return false;
 	}
+	result=fillit(jdoc);
+	return result;
+}
+
+bool Config::fillit(JsonDocument & doc) {
+
+	
+
 	ssid = 					doc["ssid"].as<std::string>();
 	password=				doc["password"].as<std::string>();
 	hostname=				doc["hostname"].as<std::string>();
@@ -94,21 +116,21 @@ bool Config::save(){
 		setStatus(ERROR_MSG,ALL,"%s - Cant Save config file, no file name found",__PRETTY_FUNCTION__);
 		return false;
 	}
-	StaticJsonDocument<JSON_DOC_SIZE> doc;
+	StaticJsonDocument<CONFIG_DOC_SIZE> doc;
 
-	doc["room"]					= config.room;
-	doc["ssid"]					= config.ssid;
-	doc["password"]				= config.password;
-	doc["hostname"]				= config.hostname;
-	doc["mqttServer"]			= config.mqttServer;
-	doc["mqttPort"]				= config.mqttPort;
-	doc["mqttUser"]				= config.mqttUser;
-	doc["mqttPassword"]			= config.mqttPassword;
-	doc["mqttScanTopicPrefix"]	= config.mqttScanTopicPrefix;
-	doc["mqttStateTopicPrefix"]	= config.mqttStateTopicPrefix;
-	doc["ntpServer"] 			= config.ntpServer;
-	doc["gmtOffser"]			= config.gmtOffset;
-	doc["daylightOffset"]		= config.daylightOffset;			
+	doc["room"]					= room;
+	doc["ssid"]					= ssid;
+	doc["password"]				= password;
+	doc["hostname"]				= hostname;
+	doc["mqttServer"]			= mqttServer;
+	doc["mqttPort"]				= mqttPort;
+	doc["mqttUser"]				= mqttUser;
+	doc["mqttPassword"]			= mqttPassword;
+	doc["mqttScanTopicPrefix"]	= mqttScanTopicPrefix;
+	doc["mqttStateTopicPrefix"]	= mqttStateTopicPrefix;
+	doc["ntpServer"] 			= ntpServer;
+	doc["gmtOffser"]			= gmtOffset;
+	doc["daylightOffset"]		= daylightOffset;			
 
 	if(serializeJson(doc, file)==0) {
 		setStatus(ERROR_MSG,ALL,"Failed to write settings to SPIFFS config file");

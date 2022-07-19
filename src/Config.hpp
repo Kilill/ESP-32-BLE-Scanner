@@ -1,10 +1,6 @@
 #ifndef __config_h__
 #define __config_h__
-#include "Arduino.h"
-#include <stdio.h>
 #include <string>
-#include "SPIFFS.h" 
-#include <ArduinoJson.h> 
 #include "Settings.hpp"
 
 const std::string DEFAULT_CONFIG_FILE_NAME="/config.json";
@@ -16,11 +12,12 @@ const std::string DEFAULT_MQTT_USER="BLEScanner32";
 const std::string DEFAULT_MQTT_PORT="1883";
 
 //size of json document recomended by https://arduinojson.org/v6/assistant/#/step1
-#define JSON_DOC_SIZE 768
+#define CONFIG_DOC_SIZE 768
 
 class Config : public Settings
 {
 public:
+
 	std::string ssid;					// ssid to connect to
 	std::string password;				// wifi password used for both ap and station
 	std::string hostname;				// base hostname config will add room 
@@ -40,13 +37,15 @@ public:
 	std::string ntpServer; 				// time serve
 	int gmtOffset;						// Local offser from gmt in seconds
 	int daylightOffset;					// Daylight saving time in seconds
-	int16_t debugLvl;					// Default debug level at start up see debug.h for explanatiion
+	uint16_t debugLvl;						// Default debug level at start up see debug.h for explanatiion
+
 	bool mqttValid;						// is mqtt config valid
 	bool webValid;						// is web and Wifi valid
 	bool valid;							// is config valid
 	
 	Config(std::string cfgFileName=DEFAULT_CONFIG_FILE_NAME);
 
+	bool fillit(JsonDocument& doc);
 	bool load();
 	bool save();
 };
