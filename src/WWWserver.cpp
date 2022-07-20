@@ -103,7 +103,7 @@ bool devicesPost(uint8_t * data,AsyncWebServerRequest *request) {
 	JsonArray postDev = jsonDoc["devices"].as<JsonArray>();
 	if( (fillOk=devices.fill(postDev)) && (saveOk=devices.save()) ) {
 		INFO("got %d devices from web UI \n", devices["devices"].size());
-		request->send(200, "text/html", "<div class=responce>New devices saved </div>");
+		request->send(200, "text/html", "<div class=okresponce>Device list saved </div>");
 		return true;
 	} else {
 		ERR("%s failed \n",!fillOk?"fill":"save");

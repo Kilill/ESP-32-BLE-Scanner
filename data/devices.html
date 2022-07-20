@@ -7,7 +7,6 @@
 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 	<script src="jquery-3.6.0.min.js"></script>
-	<script src="devices.js"></script>
 <body>
 
 	<div style='text-align:left;display:inline-block;color:#000000;min-width:400px;'>
@@ -19,20 +18,144 @@
         	<a href="/" class="nav_button">Home</a><a href="/devices" class="nav_button">Device Management</a><a href="/config" class="nav_button">Config</a>
 		</div>
 		<br><br>
+		<fieldset class='fieldset'>
 		<form id='devForm' action='#' method='POST'>
-			<fieldset class='fieldset'>
 				<legend class='legend'>BLE Devices Beacons</legend>
 				<table id='devtab'>
 					<thead>
 					<tr >
-						<th>UUID</th><th>Name</th> 
+						<th>UUID</th><th>Name</th><th>-</th> 
 					</tr>
 					</thead>
 					<tbody id='devices'>
 					</tbody>
 				</table>
-				<button id='devSubmit' type='submit' class='button save'>Save Devices</button>
-			</fieldset>
+				<span><button id='devSubmit' type='submit' class='button'>Save Devices</button> <button id='addDev' class='button'>Add Device</button></button>
 		</form>
+		<div id='Stat', class='status'><div>
+		</fieldset>
+		
 </body>
+<script>
+var devCount=0;
+
+function addDevice(theUuid,theName) {
+
+			console.log("adding device: "+devCount);
+			row=$("<tr>").attr({id:"devRow"+devCount});
+			row.appendTo($("#devices"));
+
+			td=$('<td>').attr({id:"tdUuid"+devCount}).appendTo('#devRow'+devCount);
+			$('<input>').attr({type:'text', class:"uuid",id:'uuid'+devCount}).val(theUuid).appendTo('#tdUuid'+devCount);
+
+			td=$('<td>').attr({id:'tdName'+devCount}).appendTo('#devRow'+devCount);
+			$('<input>').attr({type:'text', class:"name",id:'name'+devCount}).val(theName).appendTo('#tdName'+devCount);
+
+			td=$('<td>').attr({id:"tdDel"+devCount}).appendTo('#devRow'+devCount);
+			db=$('<img>').attr({src:"bin.png",class:"delButt",id:'delBut'+devCount, widht:"16", heigth:"16"}).appendTo('#tdDel'+devCount);
+			devCount++;
+}
+
+function getdevices (){
+	var row;
+	var tr;
+	var data;
+
+	$.getJSON("devices.json",data, function(data) {
+		devices=data.devices;
+		console.log(devices);
+		devCount=0;
+		devices.forEach(function(device ){
+			addDevice(device.UUID,device.Name);
+		});
+	});
+}
+
+$('#devSubmit').click(function(e) {
+
+	e.preventDefault();
+  	var headersText = [];
+  	var $headers = $("th");
+	var myRows=[];
+	var devices={};
+	var error="";
+	var a;
+	var b;
+	var i;
+	var j;
+
+	console.log("saving data");
+  	var $rows = $("tbody tr").each(function(index) {
+    	$cells = $(this).find("td");
+    	myRows[index] = {};
+
+    	$cells.each(function(cellIndex) {
+      	// Set the header text
+      		if(headersText[cellIndex] === undefined) {
+				headersText[cellIndex] = $($headers[cellIndex]).text();
+			}
+			// Update the row object with the header/cell combo
+			myRows[index][headersText[cellIndex]] = $(this).find("input").val();
+		});    
+	});
+	
+	console.log(myRows);
+	error="";
+	for(i=0;i<myRows.length;i++) {
+		if(myRows[i].UUID.length == 0) {
+			error="Missing UUID row: "+(i+1);
+			break;
+		} else if(myRows[i].Name.length == 0) {
+			error="Missing Name row: "+(i+1);
+			break;
+		} else {
+			for(j=i+1;j<myRows.length;j++){
+				if(myRows[j].UUID == myRows[i].UUID ) {
+					error="Duplicate UUID Rows: " + (i+1) + " - " + (j+1) + ", fix before saving";
+					break;
+				}
+			}
+		}
+	}
+
+	if(error.length != 0) {
+		$('#Stat').empty();
+		$('#Stat').append(error);
+		$('#Stat').css('background','#ff8566');
+		$('#Stat').show(500);
+		return;
+	}
+	devices={'devices': myRows};
+	jsondata=JSON.stringify(devices);
+	$.post('/devices',jsondata,function(result) {
+		console.log("save result:",result);
+		$('#Stat').empty();
+		$('#Stat').append('Devices Saved');
+		$('#Stat').css('background','#2eb82e');
+		$('#Stat').show(500);
+	});
+});
+
+$('#addDev').click( function(e) {
+
+	e.preventDefault();
+	addDevice("","");
+
+});
+
+$('#devtab').on('click',"", function(event) {
+	$('#Stat').hide(1500);
+    $('#saveStat').empty();
+});
+
+$('#devtab').on('click','.delButt', function(event) {
+    $(this).closest('tr').remove();
+});
+
+$(document).ready(function () {
+	$('#Stat').hide();
+	getdevices();
+});
+
+</script>
 </html>
