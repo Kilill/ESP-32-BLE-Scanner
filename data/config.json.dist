@@ -1,41 +1,37 @@
-n/ copy this file to data as config.json
-// and edit entries apropoatly.
+// copy this file to data/config.json
+// and edit entries apropiatly.
 // comment lines can be left, but will be lost when/if the webgui is used to update the config
 {
-		// ssid of local wifi net
+		// ssid of local wifi net to connect to, if not present forces the scanner to start in AP mode.
 	"ssid"					: "myWifi",
-		// password for same
+		// password for same will also be used as AP password if running in AP mode.
 	"password"				: "secret",
-		// hostname together with location will used as ssid when running in AP mode
+		// hostname together with location will used as ssid when running in AP mode.
 	"hostname"				: "BLE_Scan_",
-		// ip address to use as client, leave blank for DHCP
+		// ip address to use as client, leave blank for DHCP assigned.
 	"ipaddress"				: "",
-		// ip address to use when in AP mode if blank defauilts to 192.168.4.1 if not set
+		// ip address to use when in AP mode. Defaults to 192.168.4.1 if not set or invalid .
 	"apipaddress"			: "192.168.4.1",
-		// netmask to use when running in ap mode defaults tp 255.255.255.0 if not set
+		// netmask to use when running in ap mode. Defaults to 255.255.255.0 if not set.
 	"netmask"				: "255.255.255.0",
-		// FQDN/IP address to mqtt server
+		// FQDN/IP address to mqtt server. Required.
 	"mqttServer"			: "mqtt.local.net",
-		// mqtt port defaults to 1883
+		// mqtt port. Defaults to 1883 if not set.
 	"mqttPort"				: "1883",
-		// mqtt user with submit previlieges
+		// mqtt user with submit previlieges. Defaults to empty string if not present.
 	"mqttUser"				: "BLE32Scanner",
-		// password for same
+		// password for same. Defaults to empty string if no present.
 	"mqttPassword"			: "MQttSecret",
 		// base of scant topic for scan results, location will be concatenated at end for full topic
 	"mqttScanTopicPrefix" : "/HAS/presence/scan/",
 		// base of status topic for status messages will be concatenated with location
 	"mqttStateTopicPrefix"	: "/HAS/presence/status/",
-		// name of location where sensor is located used as subtopic in scan and status reports
+		// name of location where sensor is located used as subtopic in scan and status reports and AP SSID
 	"location"					: "Location 0",
-		// FQDN /IP address of nntp server used for retreiving correct time
+		// FQDN /IP address of nntp server used for retreiving correct time. Defaults to pool.ntp.org
 	"ntpServer"				: "pool.ntp.org",
-		// GMT offset of local time zone in seconds
+		// GMT offset of local time zone in seconds 
 	"gmtOffset"				: "0",
 		// daylight saving offset if in effect
 	"daylightOffset"		: "0"
-		// Inital debug level for logging to serial, if not set or 0 defaults to INFO (see debug.h and dbgLevels.h)
-		// You also need to set the DEBUG_LEVEL macro in each file for debug do be included
-		// see debug.h for explanation
-	"debugLvl"				: 0
  }
