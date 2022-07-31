@@ -1,10 +1,21 @@
-# ESP-32-BLE-Scanner
+# ESP 32 BLE Beacon Scanner
 for Home Assistant. [See thread at Home Assistant Board.](https://community.home-assistant.io/t/esp-32-ble-scanner-a-room-presence-detection-solution/315205)
 
 ### This is a fork
 
-This is a fork of this repo https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner. An excellent idea, however I ran into some issues when trying to use it on my esp32. So I forked it in an attempt to fix those issues (changed the MQTT lib used for instance). I also ended up refactoring a lot of the code which made it, I think, somewhat easier to grasp and to extend upon. I am a programmer, but by no means an expert c++ programmer so there is undoubtedly still much room for improvement :). 
-Unfortunately, at the moment I am not able to create a working .bin file from the code, so the only way to get this to work is to install it using PlatformIO (see [full original instructions](https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner) ).
+This is a fork from https://github.com/realjax/ESP-32-BLE-Scanner wich in turn is a for from https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner
+
+I concurr with realjax that it is "An excellent idea", i also started with the version from HeimdalMidgard but whanted some additions so tried the "realjax" fork but there was still some things i whanted to change,
+So I in turn forked to see if i could fix those issues. But i  also ended up refactoring a lot of the code which made it. If it is easier to understand or  extend upon i have no idea.
+
+### Installing 
+the Bin directory contains the spiffs file system image and the firmware image (spiffs.bin and firmware.bin) but one still needs the ESPRESS  tools to upload them, the same goes for if you hand edit the config or deice json files you will beed
+the espressif tools to build a new file system image.
+
+so i think the easiest way to install it is via plaformio, you only need the platformio core version see https://docs.platformio.org/en/latest/core/installation/index.html. 
+
+Running 'pio run -r build'  will download all requist tools and libraries.
+
 
 
 

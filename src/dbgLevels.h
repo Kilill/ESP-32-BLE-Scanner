@@ -1,14 +1,22 @@
 #ifndef __DBGLEVELS_H__
 #define __DBGLEVELS_H__
 
-//ALL_L also used as "set to default" flag in config 
-#define ALL_L	0
-#define	VERBOSE_L 1
-#define	DBG_L	2
-#define	INFO_L	3
-#define	WARN_L	4
-#define	ERROR_L	5
-#define	FAIL_L	6
-#define	NONE_L	7
+/*! \file debgLevels.h
+ * @brief debug level defines
+ *
+ * must be included before debug.h
+ * if you change these you need to fix debug.h ans debug.cpp as well
+ */
+
+#define NONE_DBGL	0
+#define	FAIL_DBGL	1
+#define	ERROR_DBGL	2
+#define	WARN_DBGL	3
+#define	INFO_DBGL	4
+#define	DBG1_DBGL	5
+#define	DBG2_DBGL	6
+#define	DBG3_DBGL	7
+#define	VERBOSE_DBGL 8
+#define	ALL_DBGL	9
 
 #endif

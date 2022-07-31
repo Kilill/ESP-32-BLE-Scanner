@@ -1,3 +1,32 @@
+/*
+ ESP32 BLE Beacon scanner
+
+  Copyright (c) 2022 Kim Lilliestierna. All rights reserved.
+  https://github.com/Kilill/ESP-32-BLE-Scanner
+
+  based on code from:
+  Copyright (c) 2021 realjax (https://github.com/realjax). All rights reserved.
+  https://github.com/realjax/ESP-32-BLE-Scanner
+  
+  Copyright (c) 2020 (https://github.com/HeimdallMidgard) All rights reserved.
+  https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner
+
+
+  This code is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 3 of the License, or (at your option) any later version.
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library in the LICENSE file. If not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  or via https://www.gnu.org/licenses/gpl-3.0.en.html
+
+*/
+
 #define ARDUINOJSON_ENABLE_COMMENTS 1
 #include "Arduino.h"
 #include <stdio.h>
@@ -11,17 +40,13 @@
 #include "Util.hpp"
 
 #include "dbgLevels.h"
-//#define DEBUG_LEVEL DBG_L
+#define DEBUG_LEVEL INFO_DBGL
 #include "debug.h"
 
 Config::Config(std::string cfgFileName): Settings(cfgFileName) {
 	valid=false;
 }
 
-/* need to read the file into a char buffer
- * since trying to pass and JsonObject as am argument to fillit fails with
- * weird errors that im not smart enough to grasp
- */
 bool Config::load() {
 	bool result;
 
@@ -30,111 +55,150 @@ bool Config::load() {
 	INFO("Loading config\n");
 
 	if (! openFile()) {
-		setStatus(ERROR_MSG, ALL, "%s - Failed to open config file %s", __PRETTY_FUNCTION__, fileName.c_str() );
 		return false;
 	}
 
 	if ( (desError=deserializeJson(jdoc, file)) != DeserializationError::Ok ) {
-		ERR("failed to deserialize config Data");
+		setError(JsonDeserialize_E," to %s",fileName);
 		return false;
 	}
-	result=fillit(jdoc);
+	result=fillit(jdoc.as<JsonVariant>());
 	return result;
 }
 
-bool Config::fillit(JsonDocument & doc) {
+bool Config::fillit(JsonVariant jvar) {
 
+	auto && conf=jvar.as<JsonObject>();
+	DBG1("Config:fillit\n");
+
+	ssid = 					conf["ssid"].as<std::string>();
+	password=				conf["password"].as<std::string>();
+	hostname=				conf["hostname"].as<std::string>();
+	location=				conf["location"].as<std::string>();
+	ipaddress=				conf["ipaddress"].as<std::string>();
+	apipaddress=			conf["apipaddress"].as<std::string>();
+	netmask=				conf["netmask"].as<std::string>();
+	mqttServer=				conf["mqttServer"].as<std::string>();
+	mqttPort=				conf["mqttPort"].as<std::string>();
+	mqttUser=				conf["mqttUser"].as<std::string>();
+	mqttPassword=			conf["mqttPassword"].as<std::string>();
+	mqttStateTopicPrefix=	conf["mqttStateTopicPrefix"].as<std::string>();
+	mqttScanTopicPrefix=	conf["mqttScanTopicPrefix"].as<std::string>();
+	ntpServer=				conf["ntpServer"].as<std::string>();
+	gmtOffset=				conf["gmtOffser"].as<int>();
+	daylightOffset=			conf["daylightOffset"].as<int>();
+	debugLvl=				conf["debugLvl"].as<int>();
+
+	VERBOSE("ssid:                 %s\n", ssid.c_str() );
+	VERBOSE("password:             %s\n", password.c_str());
+	VERBOSE("hostname:             %s\n", hostname.c_str());
+	VERBOSE("location:             %s\n", location.c_str());
+	VERBOSE("ipaddress:            %s\n", ipaddress.c_str());
+	VERBOSE("apipaddress:          %s\n", apipaddress.c_str());
+	VERBOSE("netmask:              %s\n", netmask.c_str());
+	VERBOSE("mqttServer:           %s\n", mqttServer.c_str());
+	VERBOSE("mqttPort:             %s\n", mqttPort.c_str());
+	VERBOSE("mqttUser:             %s\n", mqttUser.c_str());
+	VERBOSE("mqttPassword:         %s\n", mqttPassword.c_str());
+	VERBOSE("mqttStateTopicPrefix: %s\n", mqttStateTopicPrefix.c_str());
+	VERBOSE("mqttScanTopicPrefix:  %s\n", mqttScanTopicPrefix.c_str());
+	VERBOSE("ntpServer:            %s\n", ntpServer.c_str());
+	VERBOSE("gmtOffset:            %d\n", gmtOffset);
+	VERBOSE("daylightOffset:       %d\n", daylightOffset);
+
+	// set default for some entrires that needs to have sane defaults
+	// defaults are defined in Config.hpp
+	// "hostname" will be modified to "hostname_location" by startWifiClient 
+	error=OK_E;
+
+	checkArg(hostname,		DEFAULT_HOST_NAME,		ConfigMissingHostName_E);
+	checkArg(location,		DEFAULT_LOCATION,		ConfigMissingLocation_E);
+
+	fullHostname = hostname+"_"+location;
 	
-
-	ssid = 					doc["ssid"].as<std::string>();
-	password=				doc["password"].as<std::string>();
-	hostname=				doc["hostname"].as<std::string>();
-	room=					doc["room"].as<std::string>();
-	ipaddress=				doc["ipaddress"].as<std::string>();
-	apipaddress=			doc["apipaddress"].as<std::string>();
-	netmask=				doc["netmask"].as<std::string>();
-	mqttServer=				doc["mqttServer"].as<std::string>();
-	mqttPort=				doc["mqttPort"].as<std::string>();
-	mqttUser=				doc["mqttUser"].as<std::string>();
-	mqttPassword=			doc["mqttPassword"].as<std::string>();
-	mqttStateTopicPrefix=	doc["mqttStateTopicPrefix"].as<std::string>();
-	mqttScanTopicPrefix=	doc["mqttScanTopicPrefix"].as<std::string>();
-	ntpServer=				doc["ntpServer"].as<std::string>();
-	gmtOffset=				doc["gmtOffser"].as<int>();
-	daylightOffset=			doc["daylightOffset"].as<int>();
-	debugLvl=				doc["debugLvl"].as<int>();
-
-	// set default for some
-	// "hostname" will be modified to "hostname_room" by startWifiClient 
-	if(hostname.size()==0) hostname=DEFAULT_HOST_NAME;
-	fullHostname=hostname+"_"+room;
-	//
 	// default gateway will be set to same ip address 
-	if(apipaddress.size()==0) apipaddress=DEFAULT_IP_ADDRESS;
-	if(netmask.size()==0) netmask=DEFAULT_NET_MASK;
-	if(password.size()==0) password=DEFAULT_WIFI_PASSWORD;
-	if(mqttUser.size()==0) mqttUser=DEFAULT_MQTT_USER;
-	if(mqttPort.size()==0) mqttPort=DEFAULT_MQTT_PORT;
+	checkArg(apipaddress,	DEFAULT_IP_ADDRESS,		ConfigMissingAPIP_E);
+	checkArg(netmask, 		DEFAULT_NET_MASK,		ConfigMissingAPNetmask_E);
 
+	//TODO: validate ipaddresses and netmask for sanity.
+	// std:regex ipMatch("\d{3}\.\d{3}\.\d{3}\.\d{3}");
+	// if( std::regex_match(ipaddres,ipMatch) ...
 
-	closeFile();
 	// check for valid wifi credentials
-	if(  ssid.size() 
-		&& password.size()
-		&& hostname.size() 
-		&& ssid.size() 
-	){
-		DBG("Web lig valid\n") ;
-		webValid =true;
-	} else {
-		FAIL("missing ssid,hostname or password in config\n");
-	}
+	checkArg(password,		DEFAULT_WIFI_PASSWORD,	ConfigMissingPassword_E);
+	checkArg(ssid,			fullHostname,			ConfigMissingSSID_E);
 
-	if( room.size()
-		&& mqttServer.size()
-		&& mqttPort.size()
-		&& mqttUser.size()
-		&& mqttPassword.size()
-		&& mqttStateTopicPrefix.size()
-		&& mqttScanTopicPrefix.size()
-	  ) {
-		DBG("Mqtt config valid\n") ;
-		valid= webValid && mqttValid;
-		mqttValid = true;
-	} else {
-		ERR("Missing mqttserver, mqttPort, mqttUser, mqttPassword, mqttStateTopicPrefix or mqttScanTopicPregix\n");
+	if(error == OK_E) {
+		DBG2("Wifi config valid\n") ;
+		webValid =true;
 	}
-	INFO("Config  Loaded \n");
-	return true;
+	// Mqtt checks
+	checkArg(mqttServer,			DEFAULT_UKNOWN,			ConfigMissingMqttServer_E);
+	checkArg(mqttUser,				DEFAULT_MQTT_USER,		ConfigMissingMqttUser_E);
+	checkArg(mqttPort,				DEFAULT_MQTT_PORT,		ConfigMissingMqttPort_E);
+	checkArg(mqttPassword,			DEFAULT_EMPTY,			ConfigMissingMqttPassword_E);
+	checkArg(mqttStateTopicPrefix,	DEFAULT_STATUS_TOPIC,	ConfigMissingStatusTopic_E);
+	checkArg(mqttScanTopicPrefix,	DEFAULT_SCAN_TOPIC,		ConfigMissingScanTopic_E);
+
+	if(error == OK_E) {
+		DBG2("Mqtt config valid\n") ;
+		mqttValid = true;
+		valid = webValid && mqttValid;
+		INFO("Config valid\n");
+	} 
+	valid= webValid && mqttValid;
+	return valid;
 };
 
 bool Config::save(){
 
 	bool valid = false;
-	if(!openFile("w")) {
+	char buffer[CONFIG_DOC_SIZE];
+	DBG2("Config:save\n");
 
-		setStatus(ERROR_MSG,ALL,"%s - Cant Save config file, no file name found",__PRETTY_FUNCTION__);
+	if(!openFile("w")) {
 		return false;
 	}
+
 	StaticJsonDocument<CONFIG_DOC_SIZE> doc;
 
-	doc["room"]					= room;
-	doc["ssid"]					= ssid;
-	doc["password"]				= password;
-	doc["hostname"]				= hostname;
-	doc["mqttServer"]			= mqttServer;
-	doc["mqttPort"]				= mqttPort;
-	doc["mqttUser"]				= mqttUser;
-	doc["mqttPassword"]			= mqttPassword;
-	doc["mqttScanTopicPrefix"]	= mqttScanTopicPrefix;
-	doc["mqttStateTopicPrefix"]	= mqttStateTopicPrefix;
-	doc["ntpServer"] 			= ntpServer;
+	doc["location"]				= location.c_str();
+	doc["ssid"]					= ssid.c_str();
+	doc["password"]				= password.c_str();
+	doc["hostname"]				= hostname.c_str();
+	doc["mqttServer"]			= mqttServer.c_str();
+	doc["mqttPort"]				= mqttPort.c_str();
+	doc["mqttUser"]				= mqttUser.c_str();
+	doc["mqttPassword"]			= mqttPassword.c_str();
+	doc["mqttScanTopicPrefix"]	= mqttScanTopicPrefix.c_str();
+	doc["mqttStateTopicPrefix"]	= mqttStateTopicPrefix.c_str();
+	doc["ntpServer"] 			= ntpServer.c_str();
 	doc["gmtOffser"]			= gmtOffset;
-	doc["daylightOffset"]		= daylightOffset;			
+	doc["daylightOffset"]		= daylightOffset;
 
-	if(serializeJson(doc, file)==0) {
-		setStatus(ERROR_MSG,ALL,"Failed to write settings to SPIFFS config file");
-		return false;
+	DBG3("Serialzing\n");
+
+	if(serializeJson(doc, file)!=0) {
+		VERBOSE("Config:save Config Json %s\n",buffer);
+		valid=true;
+	} else {
+		setError(JsonSerialize_E," config to %s\n",fileName);
 	}
-	return true;
+	closeFile();
+	return valid;
+}
+// check if tags is not null, and set to default if so
+uint16_t Config::checkArg(std::string& arg, const std::string& argDefault, errorT errorCode) {
+
+	if(arg.size() == 0) {
+		arg=argDefault;
+		setError(errorCode," Setting to default %s",argDefault.c_str());
+
+		return error;
+	} else if(arg.size() > MAX_ARG_SIZE) {
+		setError(ConfigArgLength_E," truncating to %d",argDefault.c_str());
+		arg.erase(MAX_ARG_SIZE,std::string::npos);
+		return error;
+	}
+	return OK_E;
 }

@@ -24,7 +24,7 @@
 				<table id='devtab'>
 					<thead>
 					<tr >
-						<th>UUID</th><th>Name</th><th>-</th> 
+						<th>uuid</th><th>name</th><th>-</th> 
 					</tr>
 					</thead>
 					<tbody id='devices'>
@@ -36,55 +36,79 @@
 		</fieldset>
 		
 </body>
+
 <script>
-var devCount=0;
 
-function addDevice(theUuid,theName) {
+// ---- add new device to list
+// todo uuid and name length validation
 
-			console.log("adding device: "+devCount);
-			row=$("<tr>").attr({id:"devRow"+devCount});
+function addDevice( index,theUuid, theName) {
+
+			console.log("adding device: "+index+" uuid="+theUuid+" name:"+theName);
+
+			row=$("<tr>").attr({id:"devRow"+index});
 			row.appendTo($("#devices"));
 
-			td=$('<td>').attr({id:"tdUuid"+devCount}).appendTo('#devRow'+devCount);
-			$('<input>').attr({type:'text', class:"uuid",id:'uuid'+devCount}).val(theUuid).appendTo('#tdUuid'+devCount);
+			td=$('<td>').attr({id:"tdUuid"+index}).appendTo('#devRow'+index);
+			$('<input>').attr({type:'text', class:"uuid",id:'uuid'+index}).val(theUuid).appendTo('#tdUuid'+index);
 
-			td=$('<td>').attr({id:'tdName'+devCount}).appendTo('#devRow'+devCount);
-			$('<input>').attr({type:'text', class:"name",id:'name'+devCount}).val(theName).appendTo('#tdName'+devCount);
+			td=$('<td>').attr({id:'tdName'+index}).appendTo('#devRow'+index);
+			$('<input>').attr({type:'text', class:"name",id:'name'+index}).val(theName).appendTo('#tdName'+index);
 
-			td=$('<td>').attr({id:"tdDel"+devCount}).appendTo('#devRow'+devCount);
-			db=$('<img>').attr({src:"bin.png",class:"delButt",id:'delBut'+devCount, widht:"16", heigth:"16"}).appendTo('#tdDel'+devCount);
-			devCount++;
+			td=$('<td>').attr({id:"tdDel"+index}).appendTo('#devRow'+index);
+			db=$('<img>').attr({src:"/bin.png",class:"delButt",id:'delBut'+index, widht:"16", heigth:"16"}).appendTo('#tdDel'+index);
 }
+
+// ----- get device json file
 
 function getdevices (){
 	var row;
 	var tr;
 	var data;
+	var devCount=0;
 
-	$.getJSON("devices.json",data, function(data) {
-		devices=data.devices;
-		console.log(devices);
-		devCount=0;
-		devices.forEach(function(device ){
-			addDevice(device.UUID,device.Name);
-		});
+	console.log("getDevices\n");
+	$.getJSON("devices.json", data)
+	.done(function(data) {
+			devices=data.devices;
+			devCount=0;
+			devices.forEach(function(device ){
+				addDevice(devCount,device.uuid,device.name);
+				devCount++;
+			});
+	})
+	.fail(function(result) {
+		console.log("loading device json data failed: "+result);
 	});
 }
+
+// ----- display  status message
+
+function setStat(message, background) {
+		$('#Stat').empty();
+		$('#Stat').append(message);
+		$('#Stat').css('background',background);
+		$('#Stat').show(500);
+}
+
+// ----- post device list
 
 $('#devSubmit').click(function(e) {
 
 	e.preventDefault();
+
   	var headersText = [];
   	var $headers = $("th");
 	var myRows=[];
 	var devices={};
 	var error="";
-	var a;
-	var b;
 	var i;
 	var j;
 
-	console.log("saving data");
+	console.log("posting devices");
+
+	// ----- collect data from input fields in form
+
   	var $rows = $("tbody tr").each(function(index) {
     	$cells = $(this).find("td");
     	myRows[index] = {};
@@ -99,58 +123,85 @@ $('#devSubmit').click(function(e) {
 		});    
 	});
 	
-	console.log(myRows);
+	console.log("myrow: "+myRows);
+
+	// ---- sanity check uuids 
+
 	error="";
 	for(i=0;i<myRows.length;i++) {
-		if(myRows[i].UUID.length == 0) {
-			error="Missing UUID row: "+(i+1);
+		// sanity check
+		uuidT=myRows[i].uuid;
+		if( uuidT.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)==null){
+			error="Incorrect uuid in row: "+(i+1);
 			break;
-		} else if(myRows[i].Name.length == 0) {
+		} else if(myRows[i].name.length == 0) {
 			error="Missing Name row: "+(i+1);
 			break;
+		} else if(myRows[i].name.length >30) {	  // this needs to correspond to Device.hpp MAX_NAME_LENGTH
+			error="Name to long row: "+(i+1);
 		} else {
 			for(j=i+1;j<myRows.length;j++){
-				if(myRows[j].UUID == myRows[i].UUID ) {
-					error="Duplicate UUID Rows: " + (i+1) + " - " + (j+1) + ", fix before saving";
+				if(myRows[j].uuid == myRows[i].uuid ) {
+					error="Duplicate uuid Rows: " + (i+1) + " - " + (j+1) + ", fix before saving";
 					break;
 				}
 			}
 		}
 	}
 
+	// --- display eventual error and get out
+
 	if(error.length != 0) {
-		$('#Stat').empty();
-		$('#Stat').append(error);
-		$('#Stat').css('background','#ff8566');
-		$('#Stat').show(500);
+		console.log("error: "+error);
+		setStat(error,'#ff8566');
 		return;
 	}
+
+	// --- Finally! post it already!
+
 	devices={'devices': myRows};
 	jsondata=JSON.stringify(devices);
-	$.post('/devices',jsondata,function(result) {
-		console.log("save result:",result);
-		$('#Stat').empty();
-		$('#Stat').append('Devices Saved');
-		$('#Stat').css('background','#2eb82e');
-		$('#Stat').show(500);
-	});
+
+	console.log("sending json data : "+jsondata);
+
+	$.post({
+			url: '/devices',
+			data: jsondata,
+			contentType: 'application/json; charset=utf-8'
+		})
+		.done(function(result) {
+			console.log('update successfull:'+result);
+			setStat(result,'#2eb82e');
+		})
+		.fail(function(jqXHR,result) {
+			console.log('update failed: '+result);
+			setStat(result,'#ff8566');
+		});
 });
 
-$('#addDev').click( function(e) {
+// ---- add device button
 
+$('#addDev').click( function(e) {
 	e.preventDefault();
 	addDevice("","");
 
 });
+
+// ---- remove device 
+
+$('#devtab').on('click','.delButt', function(event) {
+    $(this).closest('tr').remove();
+});
+
+// ---- hide stat 
 
 $('#devtab').on('click',"", function(event) {
 	$('#Stat').hide(1500);
     $('#saveStat').empty();
 });
 
-$('#devtab').on('click','.delButt', function(event) {
-    $(this).closest('tr').remove();
-});
+
+// ---- setup
 
 $(document).ready(function () {
 	$('#Stat').hide();

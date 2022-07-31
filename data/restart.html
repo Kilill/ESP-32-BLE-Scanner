@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+	<meta charset='utf-8'>
+	<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+	<link rel="stylesheet" type="text/css" href="style.css">
+
+	<title>ESP 32 Bluetooth Scanner for Home Assistant</title>
+</head>
+	<script src="jquery-3.6.0.min.js"></script>
+<body>
+
+<div style='text-align:left;display:inline-block;color:#000000;min-width:400px;'>
+		<div style='text-align:center;color:#000000;'>
+			<h2>ESP 32 Bluetooth Scanner</h2>
+			<h3>for Home Assistant</h2>
+</div>
+<div style='text-align:center;'>
+	<a href="/" class="nav_button">Home</a><a href="/" class="nav_button">Device Management</a><a href="/" class="nav_button">Config</a>
+</div>
+<br><br>
+	<fieldset class="fieldset">
+		<legend class="legend">Restarting ESP Scanner</legend>
+		<span class='label'>please wait...<span> <span class='field' id='seconds'>40</span> seconds. </div>
+	<fieldset>
+</body>
+
+<script>
+function wait() {
+	var seconds = 40;
+	var foo;
+	foo  = setInterval(function() {
+		document.getElementById('seconds').innerHTML = seconds;
+		seconds--;
+		home='http://'+$(location).attr('host')+'/';
+		$.ajax({url: home,
+			timeout:900,
+			statusCode: {
+				200: function (response) {
+					clearInterval(foo);
+					console.log("got responce redirecting to "+home);
+					document.location.href = home;
+				},
+				400: function (response) {
+					console.log('got 400 on:'+home);
+				},
+				0: function (response) {
+					console.log('got 0 Still Strying');
+				}              
+			}
+		});
+	},1000);
+}
+(function () {
+	// need to let ESP reboot, it waits 5 seconds before triggering a restart
+	setTimeout(() => { wait()},15000);
+})();
+</script>
+</html>

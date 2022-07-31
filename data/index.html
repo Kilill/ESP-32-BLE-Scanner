@@ -8,13 +8,8 @@
 
 		<link rel="stylesheet" type="text/css" href="style.css"> 
 
-		<script type="text/javascript" src="scripts.js"></script>
 	</head>
-
-	<script>
-  		connect();
-	</script>
-
+	<script src="jquery-3.6.0.min.js"></script>
 	<body>
 		<div style='text-align:left;display:inline-block;color:#000000;min-width:400px;'>
 			<div style='text-align:center;color:#000000;'>
@@ -23,8 +18,8 @@
 			</div>
 			<div style='text-align:center;'>
 				<a href="/" class="nav_button">Home</a>
-				<a href="devices.html" class="nav_button">Device Management</a>
-				<a href="config.html" class="nav_button">Config</a>
+				<a href="/devices" class="nav_button">Device Management</a>
+				<a href="/config" class="nav_button">Config</a>
 			</div>
 			<br><br>
 
@@ -37,4 +32,60 @@
 			</fieldset>
 		</div>
 	</body>
+
+	<script>
+
+	"use strict";
+	var connection = null;
+	var clientID = 0;
+
+	function connect() {
+		var serverUrl;
+		var scheme = "ws";
+		var logf;
+
+		serverUrl = scheme + "://" + document.location.hostname + "/ws";
+
+		connection = new WebSocket(serverUrl);
+		console.log("Websocket Created");
+		
+		connection.onmessage = function(evt) {
+//			console.log(evt.data);
+			var msg = JSON.parse(evt.data);
+			var text = "";
+		 
+			switch(msg.type) {
+				case "INFO":
+				case "OK":
+					text = "<b>INFO: </b>" + msg.data+"<br>"
+				break;
+				case "DEVICE":
+					text = "Device detected:<b>" + msg.data.name + "</b></b> id: " + msg.data.id + " Distance: "+msg.data.distance+"<br>";
+				break;
+				case "WARN":
+					text = "<span style=\"color:orange\">Warning: </span>"+msg.data+"<br>";
+				break;
+				case "ERROR":
+					text = "<span style=\"color:red\">Warning: </span>"+msg.data+"<br>";
+				break 
+				case "DBG":
+					text = "<span style=\"color:green\">Debug:: </span>"+msg.data+"<br>";
+				break
+				default:
+					text = "<span style=\"color:blue\">Uknown:: </span>"+msg.data+"<br>";
+			}
+
+			if (text.length) {
+
+				logf=$('#logfield');
+				logf.append(text);
+			}
+		};
+	}
+	$(document).ready(function () {
+		connect();
+	});
+	</script>
+
+
 </html>

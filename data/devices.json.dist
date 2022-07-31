@@ -1,4 +1,5 @@
-// copy this file to devices.json
+// copy this file to devices.json , comment lines like thes can be left but will be lost
+// when/if the webgui is used to update the device list.
 // "uuid" needs to be in the below format ie, "name" can be anything you like
 // by default you can have up to 10 devices.
 // if more is need the MAX_DEVICES paramter in Devices.hpp needs to set

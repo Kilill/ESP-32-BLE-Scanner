@@ -1,3 +1,32 @@
+/*
+ ESP32 BLE Beacon scanner
+
+  Copyright (c) 2022 Kim Lilliestierna. All rights reserved.
+  https://github.com/Kilill/ESP-32-BLE-Scanner
+
+  based on code from:
+  Copyright (c) 2021 realjax (https://github.com/realjax). All rights reserved.
+  https://github.com/realjax/ESP-32-BLE-Scanner
+  
+  Copyright (c) 2020 (https://github.com/HeimdallMidgard) All rights reserved.
+  https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner
+
+
+  This code is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 3 of the License, or (at your option) any later version.
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library in the LICENSE file. If not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  or via https://www.gnu.org/licenses/gpl-3.0.en.html
+
+*/
+
 #define ARDUINOJSON_ENABLE_COMMENTS 1
 #include "Arduino.h"
 #include <stdio.h>
@@ -15,7 +44,7 @@
 #include "time.h"
 
 #include "dbgLevels.h"
-//#define DEBUG_LEVEL DBG_L
+//#define DEBUG_LEVEL DBG_DBGL
 #include "debug.h"
 
 
@@ -29,43 +58,41 @@ const char * MsgTypeTxt[] ={
 	"FAIL"
 };
 
-/*! \func setStatus
+/*! setStatus
+ *
  * send status message to combination of serial, Mqtt, Web
- * \param Stat_t stat type of status 
- * \param StatTarget_t destination(s) 
- * \param char * format printf format
- * ...  eventual printf arguments
+ * \param Stat_t stat	[in] type of status 
+ * \param StatTarget_t	[in] destination(s)  one of WEB,MQTT,PRINT or anny ored combination ie {WEB|PRINT)
+ * \param char *		[in] format printf format
+ * \param ...  				[in] eventual printf arguments
  */
 
-void setStatus(MsgType status ,uint16_t targets,const char * format,...) {
+void setStatus(MsgType type ,uint16_t targets,const char * format,...) {
 va_list ap;
 char* tmp=nullptr;
 
 	if(!format) return; //no format ? get out...
 
 	va_start(ap, format);
-	vasprintf(&tmp,format,ap); // inital formating of message
+	vasprintf(&tmp,format,ap); // inital formating of message (and dont forget freeing tmp below...)
 
-	if(targets & WEB) sendWsText(status,tmp); // sendWsText will handle the msg type
+	if(targets & WEB) sendWsText(type,tmp); // sendWsText will handle the msg type
 
 	// add messge type in front
-	if(targets&(PRINT|MQTT)) {
+	if(targets&MQTT) {
 		char * msg;
 		struct tm *now;
 		time_t stamp;
-		char ts[30];
+		char times[30];
 		time(&stamp);
 		now=localtime(&stamp);
 		if (now != nullptr) 
-			strftime(ts,30,",\"Date\": \"%d/%m/%Y %R\"",now);
+			strftime(times,30,",\"Date\": \"%d/%m/%Y %R\"",now);
 		else 
-			ts[0]='\0';
+			times[0]='\0';
 
-		asprintf(&msg,"{\"Status\":\"%s\",\"Msg\":%s\"%s}\n",MsgTypeTxt[status],tmp,ts);;
-
-		if(targets & PRINT) INFO("SetStatus: %s",msg);
-		if(targets & MQTT)  publishToTopic(mqttStateTopic,msg);
-
+		asprintf(&msg,"{\"Status\":\"%s\",\"Msg\":%s\"%s}\n",MsgTypeTxt[type],tmp,times);;
+		publishToTopic(mqttStateTopic,msg);
 		free(msg);
 	}
 	free(tmp);

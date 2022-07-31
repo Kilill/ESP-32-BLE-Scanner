@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" class="">
+<html lang='en' class=''>
 <head>
-<meta charset='utf-8'>
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
-<title>ESP 32 Bluetooth Scanner for Home Assistant</title>
-<link rel="stylesheet" type="text/css" href="style.css">
+	<meta charset='utf-8'>
+	<meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'/>
+	<link rel='stylesheet' type='text/css' href='style.css'>
+
+	<title>ESP 32 Bluetooth Scanner for Home Assistant</title>
 </head>
+	<script src='jquery-3.6.0.min.js'></script>
 <body>
 
 <div style='text-align:left;display:inline-block;color:#000000;min-width:400px;'>
@@ -14,25 +16,29 @@
 			<h3>for Home Assistant</h2>
 </div>
 <div style='text-align:center;'>
-	<a href="/" class="nav_button">Home</a><a href="/devices" class="nav_button">Device Management</a><a href="/config" class="nav_button">Config</a>
+	<a href='/' class='nav_button'>Home</a><a href='/devices' class='nav_button'>Device Management</a><a href='/config' class='nav_button'>Config</a>
 </div>
 <br><br>
 
-<form id='form' action='/config' method='POST'>
-	<fieldset class="fieldset">
-		<legend class="legend">WIFI</legend>
-		<table>
+<form id='cfgForm' action='#' method='POST'>
+	<div id='config'>
+	<fieldset class='fieldset'>
+		<legend class='legend'>WIFI</legend>
+		<table id='wifi_T'>
 		<tr>
-			<td class="label"><label for='ssid'>WIFI SSID:</label></td>
-			<td><div data-tip= 'SSID to connect to,Leave blank to start in WIFI AP mode.'>
-					<input	id='ssid' name='ssid' value='%SSID%'>
+			<td class='label'><label for='ssid'>WIFI SSID:</label></td>
+			<td>
+				<div data-tip='SSID to connect to,Leave blank to start in WIFI AP mode.'>
+					<input	id='ssid' name='ssid'>
 				</div>
 			</td>
 		</tr>
+
 		<tr>
 			<td class='label'><label for='password'>WIFI Password:</label></td>
-			<td><div data-tip='Password for WIFI access. Will also be used for AP mode, Defaults to "Esp32blE" if not set'>
-					<input	id='password' type='password' name='password' value='%PASSWORD%'>
+			<td>
+				<div data-tip='Password for WIFI access. Will also be used for AP mode, Defaults to "Esp32blE" if not set'>
+					<input	id='password' type='password' name='password'>
 				</div>
 			</td>
 		</tr>
@@ -41,40 +47,45 @@
 
 	<fieldset class='fieldset'>
 		<legend class='legend'>Network</legend>
-		<table>
+		<table id='network_T'>
 		<tr>
 			<td class='label'><label for='apipaddress'>AP IP Address:</label></td>
-			<td><div data-tip='IP address to use in ap mode. Defaults to "192.168.4.1"'>
-					<input	id='apipaaddress' type='text' name='aipaddress' value='%apipaddress%'>
+			<td>
+				<div data-tip='IP address to use in ap mode. Defaults to "192.168.4.1"'>
+					<input	id='apipaddress' type='text' name='apipaddress' >
 				</div>
 			</td>
 		</tr>
 		<tr>
-			<td class='label'><label for='clipaddress'>Client ip address:</label></td>
-			<td><div data-tip='IP address to use in client mode. Leave blank for dhcp assigned'>
-					<input	id='clipaaddress' type='text' name='clipaddress' value='%clpipaddress%'>
+			<td class='label'><label for='ipaddress'>Client ip address:</label></td>
+			<td>
+				<div data-tip='IP address to use in client mode. Leave blank for dhcp assigned'>
+					<input	id='ipaaddress' type='text' name='ipaddress' >
 				</div>
 			</td>
 		</tr>
 		<tr>
 			<td class='label'><label for='netmask'>Netmask:</label></td>
-			<td><div data-tip= 'IP netmask to use in client mode. Leave blank for dhcp assigned'>
-					<input	id='netmask' type='text' name='netmask' value='%netmask%'>
+			<td>
+				<div data-tip= 'IP netmask to use in client mode. Leave blank for dhcp assigned'>
+					<input	id='netmask' type='text' name='netmask' >
 				</div>
 			</td>
 		</tr>
 			<tr>
 				<td class='label'><label for='hostname'>Hostname:</label></td>
-				<td><div data-tip='Name on the the host/network extended with room name. Will also be used as the WIFI AP name'>
-						<input	id='hostname' name='hostname' value='%HOSTNAME%'>
+				<td>
+					<div data-tip='Name on the the host/network extended with location name. Will also be used as the WIFI AP name'>
+						<input	id='hostname' name='hostname'>
 					</div>
 				</td>
 			</tr>
 
 			<tr>
-				<td class='label'><label for='room'>Room:</label></td>
-				<td><div data-tip='Location name of sensor. Will be added to hostname and the  MQTT topics'>
-						<input	id='room' name='room' value='%ROOM%'>
+				<td class='label'><label for='location'>Location:</label></td>
+				<td>
+					<div data-tip='Location name of sensor. Will be added to hostname and the  MQTT topics'>
+						<input	id='location' name='location'>
 					</div>
 				</td>
 			</tr>
@@ -83,56 +94,151 @@
 
 	<fieldset class='fieldset'>
 		<legend class='legend'>MQTT</legend>
-		<table>
+		<table id='mqtt_T'>
 			<tr>
 				<td class='label'><label for='mqttServer' >MQTT Server IP: </label></td>
-				<td><div data-tip=' FQDN or IP address of mqtt server'>
-						<input	id='mqttServer' name='mqttServer' value='%MQTTSERVER%'>
+				<td>
+					<div data-tip=' FQDN or IP address of mqtt server'>
+						<input	id='mqttServer' name='mqttServer'>
 					</div>
 				</td>
 			</tr>
 			<tr>
 				<td class='label'><label for='mqttPort'>MQTT Port: </label></td>
-				<td><div data-tip= 'Defaults to "1883" if blank'>
-						<input	id='mqttPort' name='mqttPort' value='%MQTTPORT%'>
+				<td>
+					<div data-tip= 'Defaults to "1883" if blank'>
+						<input	id='mqttPort' name='mqttPort'>
 					</div>
 				</td>
 			</tr>
 			<tr>
 				<td class='label'><label for'mqttUser'>MQTT User: </label></td>
-				<td><div data-tip=' Username on MQTT Server with submit permision. Defaults to "BLEScanner32"'>
-						<input	id='mqttUser' name='mqttUser' value='%MQTTUSER%'>
+				<td>
+					<div data-tip=' Username on MQTT Server with submit permision. Defaults to "BLEScanner32"'>
+						<input	id='mqttUser' name='mqttUser'>
 					</div>
 				</td>
 			</tr>
 			<tr>
 				<td class='label'><label for='mqttPassword'>MQTT Password: </label></td>
-				<td><div data-tip=' Password for above user'>
-						<input	id='mqttPassword' type='password' name='mqttPassword' value='%MQTTPASSWORD%'>
+				<td>
+					<div data-tip=' Password for above user'>
+						<input	id='mqttPassword' type='password' name='mqttPassword'>
 					</div>
 				</td>
 			</tr>
 			<tr>
 				<td class='label'><label for='mqttScanTopicPrefix'>MQTT Scan base topic: </label></td>
-				<td><div data-tip= 'Base topic for scans room wil be added as subtopic'>
-						<input	id='mqttScanTopicPrefix' name='mqttScanTopicPrefix' value='%MQTTSCANTOPICPREFIX%'>
+				<td>
+					<div data-tip= 'Base topic for scans locatiolocation wil be added as subtopic'>
+						<input	id='mqttScanTopicPrefix' name='mqttScanTopicPrefix' >
 					</div>
 				</td>
 			</tr>
 			<tr>
 				<td class='label'><label for='mqttStateTopicPrefix'>MQTT state base topic: </label></td>
-				<td><div data-tip="Base topic status message. Room will be added as subtopic">
-						<input	id='mqttStateTopicPrefix' type='mqttStateTopicPrefix' name='mqttStateTopicPrefix' value='%MQTTSTATETOPICPREFIX%'>
-
+				<td>
+					<div data-tip='Base topic status message. "location" will be added as subtopic'>
+						<input	id='mqttStateTopicPrefix' type='mqttStateTopicPrefix' name='mqttStateTopicPrefix'>
 					</div>
 				</td>
 			</tr>
 		</table>
 	</fieldset>
 	<br><br>
-
-	<button type='submit' id='submit' class='button save'>Save Settings</button>
+	<button type='submit' id='confSubmit' class='button save'>Save Settings</button>
+	<div id='Stat' class='status'></div>
+</div>
 </form>
-
 </body>
+<script>
+
+// ----- display status message
+
+function setStat(message, background) {
+		$('#Stat').empty();
+		$('#Stat').append(message);
+		$('#Stat').css('background',background);
+		$('#Stat').show(500);
+}
+	
+// ------ get config json file
+
+function getConfig (){
+	var row;
+	var table;
+	var fieldset;
+	var dataTipDiv;
+	var tr;
+	var td;
+	var data;
+	console.log('geting config json file\n');
+	configDiv=$('#config');
+	$.getJSON('config.json',data, function(data) {
+		console.log(data);
+		$.each(data, function(tag,value) {
+			$('#'+tag).val(value)
+		});
+	})
+	.fail(function( jqxhr, textStatus, error ) {
+    	var err = textStatus + ', ' + error;
+    	console.log( 'Request Failed: ' + err );
+	})
+  	.always(function() {
+    	console.log( 'complete' );
+  });
+}
+
+// ------ post device list to server ------
+
+$('#confSubmit').click(function(e){
+	e.preventDefault();
+	var config={};
+
+	console.log('submitting new config\n')
+
+	const data = new FormData(document.getElementById('cfgForm'));
+	const value = Object.fromEntries(data.entries());
+	console.log('values: '+ value);
+	const jsonval = JSON.stringify(value);
+	console.log('config JSON:['+jsonval.length+']'+ jsonval);
+	$.post({
+			url: '/config',
+			data: jsonval,
+			contentType: 'application/json; charset=utf-8'
+		})
+	.done(function(result) {
+		console.log('config save:'+result);
+		setStat(result,'#2eb82e');
+		document.location.href = '/restart';
+	})
+	.fail(function(result) {
+		console.log('config save failed: '+result);
+		setStat(result,'#ff8566');
+	});
+});
+
+// ----- switch password visibility
+
+$('#password' ).focusin(function() { $(this).prop('type','text'); });
+$('#password').focusout(function() { $(this).prop('type','password'); });
+
+$('#mqttPassword').focusin(function() { $(this).prop('type','text'); });
+$('#mqttPassword').focusout(function() { $(this).prop('type','password'); });
+
+$(document).on('click','', function(event) {
+	$('#Stat').hide(1500);
+    $('#saveStat').empty();
+});
+
+// ----- setup
+
+$(document).ready(function () {
+	$('#Stat').hide();
+	console.log('getting config');
+	getConfig();
+});
+
+
+</script>
 </html>

@@ -1,3 +1,32 @@
+/*
+ ESP32 BLE Beacon scanner
+
+  Copyright (c) 2022 Kim Lilliestierna. All rights reserved.
+  https://github.com/Kilill/ESP-32-BLE-Scanner
+
+  based on code from:
+  Copyright (c) 2021 realjax (https://github.com/realjax). All rights reserved.
+  https://github.com/realjax/ESP-32-BLE-Scanner
+  
+  Copyright (c) 2020 (https://github.com/HeimdallMidgard) All rights reserved.
+  https://github.com/HeimdallMidgard/ESP-32-BLE-Scanner
+
+
+  This code is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 3 of the License, or (at your option) any later version.
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library in the LICENSE file. If not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  or via https://www.gnu.org/licenses/gpl-3.0.en.html
+
+*/
+
 #define ARDUINOJSON_ENABLE_COMMENTS 1
 #include "Arduino.h"
 #include <stdio.h>
@@ -15,7 +44,7 @@
 
 
 #include "dbgLevels.h"
-//#define DEBUG_LEVEL DBG_L
+//#define DEBUG_LEVEL DBG3_DBGL
 #include "debug.h"
 
 
@@ -35,15 +64,13 @@ char *mqttStateTopic;
 */
 void MQTTconnect() {
 static int connectCount=1;
-char *p;
-
-	INFO("Connecting to MQtt\n");
-
+	DBG3("Mqtt connect atempt: %d\n",connectCount);
+	connectCount++;
 	if (WiFi.isConnected()) {
 		setStatus(INFO_MSG,(WEB|PRINT),"Connecting to Mqtt, atempt: %d",connectCount);
 		mqttClient.connect();
-		connectCount++;
 	} else {
+		ERR("Wifi not connected cant connect to mqtt yet\n");
 		setStatus(ERROR_MSG,PRINT,"FAIL: Wifi not connected, cant connect MQTT");
 	}
 }
@@ -62,18 +89,18 @@ void onMqttConnect(bool sessionPresent) {
 	INFO("Connected to MQTT\n");
 	VERBOSE("Session %s\n",sessionPresent?"pressent":"not present");
 
-	DBG("publishing onlne status to %s\n",mqttStateTopic);
+	DBG1("publishing onlne status to %s\n",mqttStateTopic);
 
-	// publish "online" status to the room, dont care about returned msg id 
+	// publish "online" status to the location, dont care about returned msg id 
 	time(&stamp);
 	now=localtime(&stamp);
 	if (now != nullptr)  {
-		strftime(ts,30," at: %d/%m/%Y %R",now);		  
+		strftime(ts,30,"at: %d/%m/%Y %R",now);		  
 	} else 
 		ts[0]='\0';
 
 	mqttConnected=true;
-	setStatus(INFO_MSG,ALL,"Online%s",ts);
+	setStatus(INFO_MSG,ALL,"Online %s",ts);
 }
 
 /*! \fn onMqttDisconnect
@@ -116,9 +143,11 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
 			rp="Uknown";
 	}
 	
+	DBG3("Disconnected from MQTT:%s",rp);
 	setStatus(ERROR_MSG,(WEB|PRINT),"Disconnected from MQTT:%s",rp);;
 
 	if (WiFi.isConnected()) {
+		DBG3("Starting reconect timer\n");
 	// try reconnecting in 5 seconds see setup;
 		xTimerStart(mqttReconnectTimer, 0);
 	}
@@ -131,7 +160,7 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
  */
 
 void onMqttPublish(uint16_t msgId) {
-	DBG("Received publish ack. Id: %d\n",msgId);
+	DBG3("Received publish ack. Id: %d\n",msgId);
 }
 
 //TODO: add incoming message handling
@@ -151,31 +180,35 @@ int onMqttMessage( ??? ) {
 	{"cmd":"cmdarg", "data":"cmddata"}
 	where cmdarg is one of:
 
-	{"cmd":"addDev", "data":{"uuuid": "36char UUid","name:"max 30 char name"}}
-		add a device to the list of recofnized devices,
-		if data content is empty
-		or if the current device list count is >= MAX_DEVICES 
-		or if anny of uuid or name is longer than MAX_UUID_LEN or MAX_NAME_LEN nothing is done and an ERROR_MSG is sent to the status topic
+	{"cmd":"addDev", "data":[{"uuuid": "36char UUid","name:"max 30 char name"},...]}
+		add a device to the list of recognized devices,
+		nothing is done and an ERROR_MSG is sent to the status topic IF:
+		 data content is empty
+		 or if the current device list count is >= MAX_DEVICES 
+		 or if anny of uuid or name is longer than MAX_UUID_LEN or MAX_NAME_LEN
+
 		otherwise the device is added to the "devices" map, saved to the devices.json file	and a OK_MSG is sent to in status topic
 
-	{"cmd":"remDev", "data":{"uuuid": "36char UUid","name:"max 30 char name"}}
+	{"cmd":"remDev", "data":[{"uuuid": "36char UUid","name:"max 30 char name"},...]}
 		if the devices list contains an entry with the uuid and name it is removed
 		if either uuid or name is empty the compare is done on the non empty member
 		if both are empty nothing is done and an ERROR_MSG is sent to the status topix
 
-	{"cmd":"listDev", "data":{"uuuid": "36char UUid","name:"max 30 char name"}}
-		if data is empty the complete json file is sent as an INFO_MSG to the status topic
+	{"cmd":"listDev"}
+i		complete json device file is sent as an INFO_MSG to the status topic
 		otherwise the device with either the uuid or name is sent
 
-	{"cmd": "listConf", "data":{"tag":"tagame"}}
-		if data is empty the complete config file is sent back in an INFO_MSG to the status topic
+	{"cmd": "listConf"}
+		the complete config file is sent back in an INFO_MSG to the status topic
 		otherwise only the setting for tagname is sent back
 		if tagname is invalid an ERROR_MSG is sent back to the status topic
 
-	{"cmd": "setConf", "data":{ "tag":"config tag","value": "new data"}}
+	{"cmd": "setConf", "data":{ "tag":"config tag", "value": "new data",....}}
 		set config entry "config tag" the the value of "new data";
-		OK_MSG is sent on success to the status_topic
-		otherwise ERROR_MSG is sent
+		OK_MSG is sent on success to the status_topic and the devices is rebooted with the new config
+
+		if uknown config_tag , or data is out of bounds or file save fails
+		ERROR_MSG is sent to status topic 
 
 	{"cmd":"start"}
 		start reporting pressence
@@ -183,6 +216,8 @@ int onMqttMessage( ??? ) {
 	{"cmd":"stop"}
 		stop reporting presence
 		presence reports will not be sent untill a "start" or the scaner is rebooted
+
+	{"cmd": "reboot"}
 }
 */
 
@@ -190,7 +225,7 @@ int publishToTopic(char * topic, char *mqtt_msg){
 int msgId=0;
 	if (mqttClient.connected()){
 		msgId=mqttClient.publish(topic, 1, false, mqtt_msg);
-		DBG("mqttPublish to: %s - %s \n", topic, mqtt_msg);
+		DBG1("mqttPublish to: %s - %s \n", topic, mqtt_msg);
 		if(!msgId) {
 			setStatus(WARN_MSG,(WEB|PRINT),"Failed to publish message to MQTT topic: \"%s\"",topic);
 		}
@@ -200,8 +235,14 @@ int msgId=0;
 	}  
 	return msgId;
 }
-
+//TODO: this asumes WIFI is upp and running, maybe check for that here,
+//even though this is not called by main untill wifi is up....
 void setupMQTT() {
+	const int DOT_DELAY=1000;		//millisec to wait 
+	const int DOT_COUNT	= 10;		// number of wait loops between printng a "."
+	const int TIMEOUT_COUNT = 60;	// number of loops before printing a fail message
+	int dotCounter=0; 
+	int timeoutCounter = TIMEOUT_COUNT;
 
 	INFO("Setting up Mqtt\n");
 
@@ -209,7 +250,7 @@ void setupMQTT() {
 		mqttClient.setServer(config.mqttServer.c_str(),(uint16_t) std::stoi(config.mqttPort));
 		mqttSettingsAvailable = true;
 
-		DBG("host:%s, port:%d\n",config.mqttServer.c_str(),std::stoi(config.mqttPort));
+		DBG1("host:%s, port:%d\n",config.mqttServer.c_str(),std::stoi(config.mqttPort));
 
 		if (config.mqttUser.size() > 0 && config.mqttPassword.size() > 0){
 			VERBOSE("User: %s Password: %s\n",config.mqttUser.c_str(), config.mqttPassword.c_str());
@@ -218,39 +259,53 @@ void setupMQTT() {
 		}
 #define LASTCHR(str) str[strlen(str)-1]
 
-		asprintf(&mqttScanTopic,"%s%s",config.mqttScanTopicPrefix.c_str(),config.room.c_str());
-		asprintf(&mqttStateTopic,"%s%s",config.mqttStateTopicPrefix.c_str(),config.room.c_str());
+		if(mqttScanTopic != nullptr) free(mqttScanTopic);
+		if(mqttStateTopic != nullptr) free(mqttStateTopic);
+
+		asprintf(&mqttScanTopic,"%s%s",config.mqttScanTopicPrefix.c_str(),config.location.c_str());
+		asprintf(&mqttStateTopic,"%s%s",config.mqttStateTopicPrefix.c_str(),config.location.c_str());
 	
-		DBG("\tmqttScanTopic: %s\n\tmqttStatTopic: %s\n",mqttScanTopic,mqttStateTopic);
+		DBG1("\tmqttScanTopic: %s\n\tmqttStatTopic: %s\n",mqttScanTopic,mqttStateTopic);
 		
 		mqttClient.onConnect(onMqttConnect);
 		mqttClient.onDisconnect(onMqttDisconnect);
 		mqttClient.onPublish(onMqttPublish);
-		mqttClient.setWill(mqttStateTopic,1, true, "Offline");
+		mqttClient.setWill(mqttStateTopic,1, true, "(\"Status\":\"INFO\",\"Msg\":\"Offline\"}");
 
 		mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(MQTTconnect));
 
-		DBG("waiting on mqtt Connect\n");
-		int count=0;
+		DBG1("Waiting on mqtt Connect\n");
 		//xTimerStart(mqttReconnectTimer, 0);
 		MQTTconnect();
+		// no mqtt connections is a fatall condition, so hang here untill resolved or rebooted
+
 		while(!mqttClient.connected()) {
-			Serial.print(".");
-			delay(1000);
-			count++;
-			if(count>=10) {
-				count=0;
-				xTimerStart(mqttReconnectTimer, 0);
-				Serial.print("!");
+			delay(DOT_DELAY);
+			if(--dotCounter<=0) {
+				dotCounter=DOT_COUNT;
+				if (--timeoutCounter < 0) {
+					DBG3("!");
+					timeoutCounter=TIMEOUT_COUNT;
+					setStatus(ERROR_MSG,(WEB|PRINT),"Failed to connect to mqtt server, Not giving up !\n");
+				} else  {
+					DBG3("?");
+				}
+				xTimerStart(mqttReconnectTimer, 0);  // trigger a reconnect "real soon";
+			} else {
+				DBG3(".");
 			}
 		}
-		Serial.print("\n");
+		printf("\n");
+
+		INFO("MQTT Connected\n");
+		setStatus(INFO_MSG,(ALL),"MQTT Connected");
 
 	} else{
+		ERR("Invalid mqtt config\n");
 		setStatus(ERROR_MSG,(WEB|PRINT),"MQTT config not valid, can't set up the connection!");
 	}
 
-	DBG("Mqtt setup end\n");
+	DBG2("Mqtt setup done\n");
 }
 
 
