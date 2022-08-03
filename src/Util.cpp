@@ -44,7 +44,7 @@
 #include "time.h"
 
 #include "dbgLevels.h"
-//#define DEBUG_LEVEL DBG_DBGL
+#define DEBUG_LEVEL DBG_DBGL
 #include "debug.h"
 
 
@@ -69,18 +69,23 @@ const char * MsgTypeTxt[] ={
 
 void setStatus(MsgType type ,uint16_t targets,const char * format,...) {
 va_list ap;
-char* tmp=nullptr;
+char* tmp;
 
 	if(!format) return; //no format ? get out...
 
+	printf("SetStatus: before va_start\n");
+
 	va_start(ap, format);
+	printf("SetStatus: before va_sprintf\n");
 	vasprintf(&tmp,format,ap); // inital formating of message (and dont forget freeing tmp below...)
 
-	if(targets & WEB) sendWsText(type,tmp); // sendWsText will handle the msg type
+	printf("setStatus: sending msg %s to web\n",tmp);
+	if((targets & WEB) && WebUp) sendWsText(type,tmp); // sendWsText will handle the msg type
 
 	// add messge type in front
-	if(targets&MQTT) {
-		char * msg;
+	
+	if((targets&MQTT) && mqttConnected) {
+		char* msg;
 		struct tm *now;
 		time_t stamp;
 		char times[30];
@@ -91,10 +96,13 @@ char* tmp=nullptr;
 		else 
 			times[0]='\0';
 
+		DBG2("Publishing to mqtt Status\n");
 		asprintf(&msg,"{\"Status\":\"%s\",\"Msg\":%s\"%s}\n",MsgTypeTxt[type],tmp,times);;
-		publishToTopic(mqttStateTopic,msg);
+		VERBOSE("message: %s\n",msg);
+			publishToTopic(mqttStateTopic,msg);
 		free(msg);
 	}
 	free(tmp);
+	VERBOSE("setStatus End\n");
 }
 

@@ -60,23 +60,22 @@
 					text = "<b>INFO: </b>" + msg.data+"<br>"
 				break;
 				case "DEVICE":
-					text = "Device detected:<b>" + msg.data.name + "</b></b> id: " + msg.data.id + " Distance: "+msg.data.distance+"<br>";
+					text = "<b>Device:</b>" + msg.data.name + "<b> id:</b> " + msg.data.id + " <b>Distance:</b> "+msg.data.distance+"<br>";
 				break;
 				case "WARN":
-					text = "<span style=\"color:orange\">Warning: </span>"+msg.data+"<br>";
+					text = "<span style=\"color:orange\"><b>Warning:</b> </span>"+msg.data+"<br>";
 				break;
 				case "ERROR":
-					text = "<span style=\"color:red\">Warning: </span>"+msg.data+"<br>";
+					text = "<span style=\"color:red\"><b>Error</b>: </span>"+msg.data+"<br>";
 				break 
 				case "DBG":
-					text = "<span style=\"color:green\">Debug:: </span>"+msg.data+"<br>";
+					text = "<span style=\"color:green\"><b>Debug:</b> </span>"+msg.data+"<br>";
 				break
 				default:
-					text = "<span style=\"color:blue\">Uknown:: </span>"+msg.data+"<br>";
+					text = "<span style=\"color:blue\"><b>Uknown:</b> </span>"+msg.data+"<br>";
 			}
 
 			if (text.length) {
-
 				logf=$('#logfield');
 				logf.append(text);
 			}

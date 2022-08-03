@@ -48,7 +48,7 @@ public:
 	std::string fileName;		///< file name on SPIFFS system
 	File file;					///< file descriptor for above
 	const char * errorS;				///< latest error string
-	uint16_t error;				///< latest error code
+	uint16_t	 error;				///< latest error code
 
 	const uint16_t MAX_ARG_SIZE=30;
 
@@ -96,7 +96,7 @@ public:
 	/*28*/	ConfigMissingStatusTopic_E,
 	/*29*/	ConfigMissingScanTopic_E,
 	
-	/*30*/	LastErrorConstat
+	/*30*/	LastErrorConstant
 	};
 
 	/*! constructor
@@ -106,15 +106,7 @@ public:
 		 *
 	 * @param fileName_arg [IN] std::string name of file
 	 */
-	Settings(std::string fileName_arg) {
-		fileName=fileName_arg;
-
-		if (SPIFFS.begin()) {
-			fsValid=true;
-		}
-		error=OK_E;
-		errorS=nullptr;
-	}
+	Settings(std::string fileName_arg);
 
 	//Todo this should probly be broken out into its own "Status class"
 	/*! sett and print error 
@@ -132,7 +124,8 @@ public:
 	 *
 	 * @return true/false [OUT] bool returns true if open succeeded false otherwise
 	 */
-	bool openFile() {return openFile("r");}
+
+	//bool openFile() {return openFile("r");}
 
 	/*! open the file in SPIFFs 
 	 *
@@ -143,7 +136,7 @@ public:
 	 *
 	 * @return true/false [OUT] bool returns true if open succeeded false otherwise
 	 */
-	bool openFile(const char* mode);
+	bool openFile(const char* mode="r");
 
 	/*! close file
 	 */
@@ -161,7 +154,7 @@ private:
 	 * 
 	 * if Your add anny here dont forget to add to the enum as well
 	 */
-	const char * const errorStrings [LastErrorConstat] ={
+	const char * const errorStrings [LastErrorConstant] = {
 	/* 0*/	"OK",
 	/* 1*/	"Out of memory",
 

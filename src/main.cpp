@@ -63,26 +63,31 @@ Devices devices("/devices.json");
 TimerHandle_t restartTimer;
 
 
+bool WebUp;
+
 void restartNow() {
 	INFO("triggering restart\n");
-//Todo: gracefully disconnect from Mqtt/Ntp/Wifi....);
+//TODO: gracefully disconnect from Mqtt/Ntp/Wifi....);
 	ESP.restart();
 }
+
 void triggerReset(){
 	xTimerStart(restartTimer, 0);
 }
 
 void setup() {
 	Serial.begin(115200);
-	setDbgLvl(VERBOSE_L);
+	setDbgLvl(VERBOSE_DBGL);
+	WebUp=false;
 
 	INFO("ESP32 BLE Scanner setup\n");
 
 	DBG("Loading config\n");
-	config.load();
-
-	// is config overriding the debug level ?
-	if(config.debugLvl != 0 ) setDbgLvl(config.debugLvl);
+	if(!config.load()) {
+		ERR("main: Failed to load config, setting defaults\n");
+		config.check();
+		DBG3("main: check done\n");
+	}
 
 	DBG("Starting up wifi\n");
 	setupWIFI();
@@ -92,10 +97,13 @@ void setup() {
 
 	DBG("Starting MQTT\n");
 	setupMQTT();
+
 	DBG("Loading Devices\n");
 	devices.load();
+
 	DBG("Starting Bluetooth\n");
 	setupBluetoothScanner();
+
 	DBG("enabling kill timer");
 
 	restartTimer = xTimerCreate("restartTimer", pdMS_TO_TICKS(5000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(restartNow));

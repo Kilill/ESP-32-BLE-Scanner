@@ -39,7 +39,7 @@ uint16_t DbgLevel;
 void dbg(uint16_t level,const char * format,...) {
 va_list ap;
 const char* tmp;
-    if(( level >= DbgLevel ) && format!=nullptr) {  // level not high enough or no format ? ignore...
+    if(( level <= DbgLevel ) && format!=nullptr) {  // level not high enough or no format ? ignore...
 		switch (level) {
 			case DBG1_DBGL:
 			case DBG2_DBGL:

@@ -40,11 +40,22 @@
 #include "Util.hpp"
 
 #include "dbgLevels.h"
-#define DEBUG_LEVEL INFO_DBGL
+//#define DEBUG_LEVEL VERBOSE_DBGL
+#define DEBUG_LEVEL DBG3
 #include "debug.h"
 
 Config::Config(std::string cfgFileName): Settings(cfgFileName) {
 	valid=false;
+	// set some bare minimum defaults in case config file corrupt or missing
+	
+	hostname	= DEFAULT_HOST_NAME;
+	location	= DEFAULT_LOCATION;
+	fullHostname= hostname+"_"+location;
+	apipaddress	= DEFAULT_IP_ADDRESS;
+	netmask		= DEFAULT_NET_MASK;
+	password	= DEFAULT_WIFI_PASSWORD;
+	ssid		= "";
+	error=OK_E;
 }
 
 bool Config::load() {
@@ -54,9 +65,13 @@ bool Config::load() {
 	DeserializationError desError;
 	INFO("Loading config\n");
 
+	// what to do if no file ?
+	// set some defaults ?
 	if (! openFile()) {
 		return false;
 	}
+
+	DBG1("Config: Loaded\n");
 
 	if ( (desError=deserializeJson(jdoc, file)) != DeserializationError::Ok ) {
 		setError(JsonDeserialize_E," to %s",fileName);
@@ -64,6 +79,57 @@ bool Config::load() {
 	}
 	result=fillit(jdoc.as<JsonVariant>());
 	return result;
+}
+bool Config::check(){
+	// set default for some entrires that needs to have sane defaults
+	// defaults are defined in Config.hpp
+	// "hostname" will be modified to "hostname_location" by startWifiClient 
+	error=OK_E;
+
+	// if ssid missing or corrupt set to nothing so that we at the least 
+	// can start in ap mode.
+	checkArg(ssid,			"",						ConfigMissingSSID_E);
+	checkArg(password,		DEFAULT_WIFI_PASSWORD,	ConfigMissingPassword_E);
+	
+    // Minimal wifi config is valid
+	if(error == OK_E) {
+		DBG2("Wifi config valid\n") ;
+		webValid =true;
+	}
+
+	checkArg(hostname,		DEFAULT_HOST_NAME,		ConfigMissingHostName_E);
+	checkArg(location,		DEFAULT_LOCATION,		ConfigMissingLocation_E);
+
+	fullHostname = hostname+"_"+location;
+	VERBOSE("fullhostname = $s\n",fullHostname);
+	
+	// default gateway will be set to same ip address 
+	checkArg(apipaddress,	DEFAULT_IP_ADDRESS,		ConfigMissingAPIP_E);
+	checkArg(netmask, 		DEFAULT_NET_MASK,		ConfigMissingAPNetmask_E);
+
+	//TODO: validate ipaddresses and netmask for sanity.
+	// std:regex ipMatch("\d{3}\.\d{3}\.\d{3}\.\d{3}");
+	// if( std::regex_match(ipaddres,ipMatch) ...
+
+	// check for valid wifi credentials
+
+	// Mqtt checks
+	checkArg(mqttServer,			DEFAULT_UKNOWN,			ConfigMissingMqttServer_E);
+	checkArg(mqttUser,				DEFAULT_MQTT_USER,		ConfigMissingMqttUser_E);
+	checkArg(mqttPort,				DEFAULT_MQTT_PORT,		ConfigMissingMqttPort_E);
+	checkArg(mqttPassword,			DEFAULT_EMPTY,			ConfigMissingMqttPassword_E);
+	checkArg(mqttStateTopicPrefix,	DEFAULT_STATUS_TOPIC,	ConfigMissingStatusTopic_E);
+	checkArg(mqttScanTopicPrefix,	DEFAULT_SCAN_TOPIC,		ConfigMissingScanTopic_E);
+
+	if(error == OK_E) {
+		DBG2("Mqtt config valid\n") ;
+		mqttValid = true;
+		valid = webValid && mqttValid;
+		INFO("Config valid\n");
+	} 
+	valid= webValid && mqttValid;
+	DBG3("Config Check Done\n");
+	return valid;
 }
 
 bool Config::fillit(JsonVariant jvar) {
@@ -106,48 +172,8 @@ bool Config::fillit(JsonVariant jvar) {
 	VERBOSE("gmtOffset:            %d\n", gmtOffset);
 	VERBOSE("daylightOffset:       %d\n", daylightOffset);
 
-	// set default for some entrires that needs to have sane defaults
-	// defaults are defined in Config.hpp
-	// "hostname" will be modified to "hostname_location" by startWifiClient 
-	error=OK_E;
+	return check();
 
-	checkArg(hostname,		DEFAULT_HOST_NAME,		ConfigMissingHostName_E);
-	checkArg(location,		DEFAULT_LOCATION,		ConfigMissingLocation_E);
-
-	fullHostname = hostname+"_"+location;
-	
-	// default gateway will be set to same ip address 
-	checkArg(apipaddress,	DEFAULT_IP_ADDRESS,		ConfigMissingAPIP_E);
-	checkArg(netmask, 		DEFAULT_NET_MASK,		ConfigMissingAPNetmask_E);
-
-	//TODO: validate ipaddresses and netmask for sanity.
-	// std:regex ipMatch("\d{3}\.\d{3}\.\d{3}\.\d{3}");
-	// if( std::regex_match(ipaddres,ipMatch) ...
-
-	// check for valid wifi credentials
-	checkArg(password,		DEFAULT_WIFI_PASSWORD,	ConfigMissingPassword_E);
-	checkArg(ssid,			fullHostname,			ConfigMissingSSID_E);
-
-	if(error == OK_E) {
-		DBG2("Wifi config valid\n") ;
-		webValid =true;
-	}
-	// Mqtt checks
-	checkArg(mqttServer,			DEFAULT_UKNOWN,			ConfigMissingMqttServer_E);
-	checkArg(mqttUser,				DEFAULT_MQTT_USER,		ConfigMissingMqttUser_E);
-	checkArg(mqttPort,				DEFAULT_MQTT_PORT,		ConfigMissingMqttPort_E);
-	checkArg(mqttPassword,			DEFAULT_EMPTY,			ConfigMissingMqttPassword_E);
-	checkArg(mqttStateTopicPrefix,	DEFAULT_STATUS_TOPIC,	ConfigMissingStatusTopic_E);
-	checkArg(mqttScanTopicPrefix,	DEFAULT_SCAN_TOPIC,		ConfigMissingScanTopic_E);
-
-	if(error == OK_E) {
-		DBG2("Mqtt config valid\n") ;
-		mqttValid = true;
-		valid = webValid && mqttValid;
-		INFO("Config valid\n");
-	} 
-	valid= webValid && mqttValid;
-	return valid;
 };
 
 bool Config::save(){

@@ -18,7 +18,7 @@ upt:
 # file system image
 fs: .pio/build/esp32dev/spiffs.bin
 
-.pio/build/esp32dev/spiffs.bin: data/*.json data/*.html data/*.js  data/*.png 
+.pio/build/esp32dev/spiffs.bin: data data/*.json data/*.html data/*.js  data/*.png 
 	pio run -t buildfs
 
 #upload filesystem image

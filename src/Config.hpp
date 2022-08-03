@@ -1,6 +1,7 @@
 #ifndef __config_h__
 #define __config_h__
 #include <string>
+#include <ArduinoJson.h> 
 #include "Settings.hpp"
 
 /*! \file Config.hpp 
@@ -93,6 +94,11 @@ public:
 	 * @param cfgFileName [in]	file name to read config from
 	 */
 	Config(std::string cfgFileName=DEFAULT_CONFIG_FILE_NAME);
+
+	/*! check some vital config entries and set defaults if not correct
+	 * @return bool true if config valid false otherwise
+	 */
+	bool check();
 
 	/*!
 	 * fill in the variables from a jsondov

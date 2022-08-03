@@ -66,6 +66,9 @@ extern Config config;				///< curent configuration
 extern char *mqttScanTopic;			///< mqtt topic where to send scan results
 extern char *mqttStateTopic;		///< mqtt topic where to send status reports
 
+extern bool WebUp;
+extern bool mqttConnected;
+
 /*! reports the current status
  *
  * sends a json reports to one or several targest 

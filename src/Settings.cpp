@@ -28,41 +28,46 @@
 */
 
 #define ARDUINOJSON_ENABLE_COMMENTS 1
-#include "Arduino.h"
-#include <stdio.h>
-#include <string>
-#include <map>
-#include "SPIFFS.h" 
-#include <ArduinoJson.h> 
 #include "Settings.hpp"
 #include "Util.hpp"
-#include "Config.hpp"
 
 #include "dbgLevels.h"
 //#define DEBUG_LEVEL VERBOSE_DBGL
+#define DEBUG_LEVEL DBG3_DBGL
 #include "debug.h"
 /* base class for all other settings like Config and Devices
  *
  */
+Settings::Settings(std::string fileName_arg) {
+		fileName=fileName_arg;
+
+		if (SPIFFS.begin()) {
+			fsValid=true;
+		}
+		error=OK_E;
+		errorS=nullptr;
+	}
+
 
 bool Settings::openFile(const char * mode){
-	DBG2("Settings:openFile\n");
+	DBG2("Settings: openFile\n");
 
 	if(!fsValid){
 		if(!SPIFFS.begin()) {	// should have been done by the constructor lets try again
-			setError(SPIFFS_E, " When opeing %s for %s",fileName,mode);
+			setError(SPIFFS_E, " Setting:When opeing %s for %s",fileName,mode);
 			return false;
 		} else fsValid = true;
 	}
 
 	if(fileName.size() ==0){
-		setError(FileName_E,"trying to open %s",fileName);
+		setError(FileName_E,"Setting: trying to open %s",fileName);
 		return false;
 	}
 
-	DBG3("Open(%s for %s )\n",fileName.c_str(),mode);
-	if(!(file=SPIFFS.open(fileName.c_str(),mode)) ) {
-		setError(FileOpen_E,"trying to open %s for %s",fileName,mode);
+	DBG3("Settings: Open(%s for %s )\n",fileName.c_str(),mode);
+	file=SPIFFS.open(fileName.c_str(),mode);
+	if(!file || file.size() == 0) {
+		setError(FileOpen_E,"%s for %s",fileName.c_str(),mode);
 		return false;
 	}
 	VERBOSE("file opened\n");
@@ -80,14 +85,19 @@ void Settings::setError(errorT errorCode,const char * format,...){
 	char * tmp;
 	
 	// sett instance error variables
+	if(errorCode >= LastErrorConstant) {
+		printf("setError: code out of bounds %d\n",errorCode);
+		return;
+	}
 	error=errorCode;
 	errorS=errorStrings[errorCode];
 
 	va_start(ap,format);
 	vasprintf(&tmp,format,ap);
+	printf("%s: %s\n",errorS,tmp);
 
-	printf("%s :%s\n",errorS,tmp);
-	setStatus(ERROR_MSG,ALL,"%s :%s\n",errorS,tmp);
-
+	setStatus(ERROR_MSG,ALL,"%s : %s\n",errorS,tmp);
+	delay(100);
 	free(tmp);
+
 };
