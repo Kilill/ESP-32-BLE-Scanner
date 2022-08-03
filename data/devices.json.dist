@@ -1,11 +1,14 @@
-// copy this file to devices.json , comment lines like thes can be left but will be lost
-// when/if the webgui is used to update the device list.
+// copy this file to data/devices.json
+
+// delete these comment lines, esp32/arduino json can handle comments but jquery can not
+
 // "uuid" needs to be in the below format ie, "name" can be anything you like
 // by default you can have up to 10 devices.
 // if more is need the MAX_DEVICES paramter in Devices.hpp needs to set
 {
 	"devices": [
-		{ "uuid": "aaaaaaaa-bbbb-cccc-eeee-ffffffffffff", "name": "Some known phone" }
+		{ "uuid": "0aaaaaaa-bbbb-cccc-eeee-ffffffffffff", "name": "Some known device 1" },
+		{ "uuid": "1aaaaaaa-bbbb-cccc-eeee-ffffffffffff", "name": "Some known device 2" },
+		{ "uuid": "2aaaaaaa-bbbb-cccc-eeee-ffffffffffff", "name": "Some known device 3" }
 	]
 }
-// vim: ts=4 sw=4 et

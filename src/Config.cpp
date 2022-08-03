@@ -41,7 +41,7 @@
 
 #include "dbgLevels.h"
 //#define DEBUG_LEVEL VERBOSE_DBGL
-#define DEBUG_LEVEL DBG3
+#define DEBUG_LEVEL DBG3_DBGL
 #include "debug.h"
 
 Config::Config(std::string cfgFileName): Settings(cfgFileName) {

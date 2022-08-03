@@ -1,6 +1,9 @@
 // copy this file to data/config.json
-// and edit entries apropiatly.
-// comment lines can be left, but will be lost when/if the webgui is used to update the config
+// and edit the file
+
+// delete these comment lines !
+//the esp32/arduino json can handle comments in json files, but Jquery can not
+
 {
 		// ssid of local wifi net to connect to, if not present forces the scanner to start in AP mode.
 	"ssid"					: "myWifi",

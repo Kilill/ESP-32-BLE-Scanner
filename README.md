@@ -15,10 +15,10 @@ Only need the "platformio core" version is needed see https://docs.platformio.or
 
 connect the ESP to the PC via USB 
 
-`pio run`  will checkfor / download all requist tools and libraries and then build the firmware
+`pio run`  will checkfor / download all requisit tools and libraries and then build the firmware
 
 before building the filesystem , copy the *config.json.dist* and *devices.json.dist* in the **data** directory to *config.json* and *devices.json* repectively in the same directory.
-edit both files to your liking. They need to conform to the json format of the files. 
+edit both files to your liking. They need to conform to the json format of the files, See below under Configuration.
 
 Now run `pio run -r buildfs` to build the filesystem image.
 
@@ -33,6 +33,10 @@ if you'r on a linux system and have `make` installed:
 `make upfs` uploads the filesystem image
 
 ### Configuration
+
+The data directory contains commented versions of config `(config.json.dist)` and the device `(devices.json.dist)` files. copy them to
+config.json and devices.json respectivly and edit them.
+Remove the comment lines (starting with //).
 
 The main configurarion is the _config.json_ file.
 
@@ -55,24 +59,47 @@ The main configurarion is the _config.json_ file.
 | `gmtOffset` | GMT offset of local time zone in seconds , ie EU is at 3600 . |
 | `daylightOffset` | Daylight saving offset from GMT if in effect. |
 
-The _devices.json_ contains known devices for wich to report presence and needs to conform exactly to the format.
+
+The _devices.json_ contains known devices for wich to report presence and needs to exactly conform to the format:
+`
+{
+	"devices": [
+		{ "uuid": "aaaaaaaa-bbbb-cccc-eeee-ffffffffffff", "name": "Some known device" },
+		{ "uuid": "aaaaaaaa-bbbb-cccc-eeee-ffffffffffff", "name": "Some known device2" }
+	]
+}
+`
+`devices`, `uuid` and `name` are the literal tag strings.
+
+You can have at most 10 devices in the list, (if more is needd adjust `devices.hpp` and `devices.cpp` and recompile
+
 
 | Tag | Description |
 | --- | --- |
-|`uuid` | Advertising UUID of the device, needs to conform exactly to the BLE beacon UUID format :"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"|
-| name | Name of device to report on max 30 characters |
+| `uuid` | "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee "Unique Advertising UUID of the device, it needs to conform exactly to the BLE beacon UUID format and be uniq within the file
+| `name` | "Some known device" Name of device to report on max 30 characters |
 
 
-### Changes compared to original 
-Upgraded versions of some of the libraries.
-Mainly changed the internal representation of devices to use std:map so it is easier to add/substract devices. (planned: allow for adding devices from mqtt...).
-Added entries to the config file;
-Added debug facility to send debug messages to serial. Controlled by debug macros that exclude the debug code if level not set.
-Changed the gui to request / post json information directly.
-Gui now also sanity checks eventual entries for devices as well as some config entries
+### Changes compared to original(s) 
+Upgraded versions of some of the libraries. (specifially the asyncWebserver to be able to handle json request properly)
+Changed the internal representation of "devices" and "config". Devices now use a std:map. It is now possible to add/remove devices from the gui. (planned: allow for adding devices from mqtt...).
+Added some entries to the config file;
+Added debug facility to send debug messages to serial. Controlled by debug macros that exclude the debug code if debug level not set or to low.
+Addded check to ntp server, to add timestamps on mqtt messages.
+Gui now uses jquery, the library is served directly from the SPIFFS file system.
+Changed the gui to request / post json information directly for Devices and Config.
+Changed gui layout slightly.
+Gui now also sanity checks eventual entries for devices as well as some config entries, specifically that a config file exitst at all. ( for some strange reason SPIFFS.open() seems to return true even when no file exists....)
 Gui for devices will enforce the BLE UUID format, and restricts location names to 30 characters
+Added tooltips to the config
 
+### Planed
+* Changing configuration and adding devices via mqtt.
+* "Howto" for configuring adding to HA.
 
 Notes
+* *!!!! last minute discovery!!!! there is a bug, saving config as AP does not work ? why?? have not clue.... yet* 
 * If you have not adjusted config.json and added your wifi credentials, then when you first fire up the esp32, it will be in AP mode. Connect to the wifi AP by the name of 'ESP32 BLE Scanner' and then in your browser connect to http://192.168.4.1  You can then change the settings on the config page accordingly.
 * The bluetooth scanning will only work once there is an active MQTT connection set
+* comment lines in the json files are suported by the esp32/arduino json, but this is not in the json standard so jquery does not suport it. 
+
